@@ -4,4 +4,7 @@
     <string name="debug_button_text">Debug</string>
     <string name="clear_button_text">Clear</string>
     <string name="debug_text_hint">Debugging Text</string>
+
+    <string name="b1_text">Button 1</string>
+    <string name="b2_text">Button 2</string>
 </resources>
