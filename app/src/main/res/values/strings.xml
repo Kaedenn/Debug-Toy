@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Debug Toy</string>
+    <string name="action_settings">Settings</string>
+    <string name="debug_button_text">Debug</string>
+    <string name="clear_button_text">Clear</string>
+    <string name="debug_text_hint">Debugging Text</string>
+</resources>
