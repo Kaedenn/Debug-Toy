@@ -5,15 +5,20 @@
     <string name="clear_button_text">Clear</string>
     <string name="debug_text_hint">Debugging Text</string>
 
+    <!-- Error messages and error formats -->
     <string name="err_no_cmd_f">"Failed to execute command "%s": no such command"</string>
     <string name="err_invalid_button_f">Unknown button with ID %d</string>
 
+    <!-- Commands and their help texts -->
     <string name="cmd_help_commands">Commands:</string>
-    <string name="cmd_help_default">Custom command with no help string</string>
     <string name="cmd_help">help</string>
     <string name="cmd_help_help">Show this help message</string>
     <string name="cmd_show_fab">fab</string>
     <string name="cmd_show_fab_help">Show floating action button</string>
     <string name="cmd_hide_fab">nofab</string>
     <string name="cmd_hide_fab_help">Hide floating action button</string>
+    <string name="cmd_view">view</string>
+    <string name="cmd_view_help">Inspect a view object</string>
+    <!-- Default help text for when command has no help string -->
+    <string name="cmd_help_default">Custom command with no help string</string>
 </resources>

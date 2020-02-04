@@ -6,9 +6,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
-/*
-import androidx.appcompat.widget.Toolbar;
- */
 
 import android.view.*;
 import android.widget.*;
@@ -36,24 +33,33 @@ public class MainActivity extends AppCompatActivity {
         });
 
         /* cmd_show_fab command */
-        debug.register(getResources().getString(R.string.cmd_show_fab), new Runnable() {
+        debug.register(R.string.cmd_show_fab, new Runnable() {
             @Override
             public void run() {
                 FloatingActionButton f = findViewById(R.id.fab);
                 f.show();
             }
-        }, getResources().getString(R.string.cmd_show_fab_help));
+        }, R.string.cmd_show_fab_help);
+
         /* cmd_hide_fab command */
-        debug.register(getResources().getString(R.string.cmd_hide_fab), new Runnable() {
+        debug.register(R.string.cmd_hide_fab, new Runnable() {
             @Override
             public void run() {
                 FloatingActionButton f = findViewById(R.id.fab);
                 f.hide();
             }
-        }, getResources().getString(R.string.cmd_hide_fab_help));
+        }, R.string.cmd_hide_fab_help);
 
-        /* Default command */
-        debug.register(getResources().getString(R.string.cmd_help), new Runnable() {
+        /* cmd_view command */
+        debug.register(getResources().getString(R.string.cmd_view), new Runnable() {
+            @Override
+            public void run() {
+                debug.debugView(findViewById(R.id.btDebug));
+            }
+        }, getResources().getString(R.string.cmd_view_help));
+
+        /* cmd_help command (and default) */
+        Runnable helpCommand = new Runnable() {
             @Override
             public void run() {
                 debug.debug(getResources().getString(R.string.cmd_help_commands));
@@ -62,7 +68,9 @@ public class MainActivity extends AppCompatActivity {
                     debug.debug(String.format("%-8s %s", s, helpText));
                 }
             }
-        });
+        };
+        debug.register(R.string.cmd_help, helpCommand, R.string.cmd_help_help);
+        debug.registerDefault(helpCommand, R.string.cmd_help_help);
     }
 
     private void showSnack(@NotNull CharSequence text) {

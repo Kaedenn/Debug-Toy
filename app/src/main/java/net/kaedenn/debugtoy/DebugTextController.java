@@ -32,7 +32,7 @@ public final class DebugTextController {
 
     /** Register a named command
      *
-     * The help text defaults to the "cmd_help_default" resource string.
+     * The help text defaults to the {@code cmd_help_default} resource string.
      *
      * @param cmd Named command to register
      * @param action Runnable to execute
@@ -40,6 +40,18 @@ public final class DebugTextController {
     public void register(@NotNull String cmd, @NotNull Runnable action) {
         String helpText = main.getResources().getString(R.string.cmd_help_default);
         register(cmd, action, String.format("%8s - %s", cmd, helpText));
+    }
+
+    /** Register a command by resource ID
+     *
+     * The help text defaults to the {@code cmd_help_default} resource string.
+     *
+     * @param cmdResId String resource ID for the command to register
+     * @param action Runnable to execute
+     */
+    public void register(int cmdResId, @NotNull Runnable action) {
+        String cmd = main.getResources().getString(cmdResId);
+        register(cmd, action);
     }
 
     /** Register a named command with help text
@@ -51,6 +63,18 @@ public final class DebugTextController {
     public void register(@NotNull String cmd, @NotNull Runnable action, String helpText) {
         commands.put(cmd, action);
         helpTexts.put(cmd, helpText);
+    }
+
+    /** Register a command by resource ID with help text
+     *
+     * @param cmdResId String resource ID for the command to register
+     * @param action Runnable to execute
+     * @param helpResId String resource ID for the command's help text
+     */
+    public void register(int cmdResId, @NotNull Runnable action, int helpResId) {
+        String cmd = main.getResources().getString(cmdResId);
+        String help = main.getResources().getString(helpResId);
+        register(cmd, action, help);
     }
 
     /** Register a default command (i.e. the empty string)
@@ -71,18 +95,31 @@ public final class DebugTextController {
         helpTexts.put(COMMAND_DEFAULT, helpText);
     }
 
+    /** Register the default command with the help text defined by a resource ID
+     *
+     * @param action Runnable to execute
+     * @param helpResId String resource ID for the command's help text
+     */
+    public void registerDefault(@NotNull Runnable action, int helpResId) {
+        String help = main.getResources().getString(helpResId);
+        registerDefault(action, help);
+    }
+
     /** Get all declared commands, except for the default (if present)
      *
      * @return A collection of commands, without the default command.
      */
     public Collection<String> getCommands() {
         Set<String> cmdSet = commands.keySet();
-        if (cmdSet.contains(COMMAND_DEFAULT)) {
-            cmdSet.remove(COMMAND_DEFAULT);
-        }
+        cmdSet.remove(COMMAND_DEFAULT);
         return cmdSet;
     }
 
+    /** Get the action defined for the command
+     *
+     * @param cmd Named command to look up
+     * @return The Runnable action bound to the command
+     */
     public Runnable getAction(String cmd) {
         if (commands.containsKey(cmd)) {
             return commands.get(cmd);
@@ -90,6 +127,11 @@ public final class DebugTextController {
         return null;
     }
 
+    /** Get the help text defined for the command
+     *
+     * @param cmd Named command to look up
+     * @return The help text issued when the command was registered
+     */
     public String getHelp(String cmd) {
         if (helpTexts.containsKey(cmd)) {
             return helpTexts.get(cmd);
@@ -97,53 +139,88 @@ public final class DebugTextController {
         return null;
     }
 
+    /** Removes a command entirely
+     *
+     * @param cmd The command to remove
+     */
     public void unregister(String cmd) {
         commands.remove(cmd);
     }
 
+    /** Removes the default command */
     public void unregisterDefault() {
         commands.remove(COMMAND_DEFAULT);
     }
 
+    /** Execute the command string
+     *
+     * @param cmd The command string to execute
+     * @return true if the command was executed, false otherwise
+     */
     public boolean execute(String cmd) {
         if (commands.containsKey(cmd)) {
             Runnable action = commands.get(cmd);
-            action.run();
-            return true;
+            if (action != null) {
+                action.run();
+                return true;
+            }
         }
         return false;
     }
 
+    /** Return whether or not the command is registered
+     *
+     * @param cmd The named command to examine
+     * @return true if the command is bound, false otherwise
+     */
     public boolean isRegistered(String cmd) {
         return commands.containsKey(cmd);
     }
 
+    /** Get the content of the debugActionText widget
+     *
+     * @return Current content of the debugActionText widget, as a string
+     */
     public String getDebugCommand() {
         TextView t = main.findViewById(R.id.debugActionText);
         return t.getText().toString();
     }
 
+    /** Clear the debugActionText widget's text */
     public void clearDebugCommand() {
         TextView t = main.findViewById(R.id.debugActionText);
         t.setText(COMMAND_DEFAULT);
     }
 
+    /** Append a line to the debug text box
+     *
+     * @param text The text to append
+     */
     public void debug(CharSequence text) {
         TextView t = main.findViewById(R.id.debugText);
         t.append(text);
         t.append("\n");
     }
 
+    /** Append a dump of the given view to the debug text box
+     *
+     * @param view The view to inspect
+     */
     public void debugView(View view) {
         /* TODO: add more attributes */
         this.debug(view.getClass().getTypeName());
         this.debug(view.toString());
     }
 
+    /** Dump an arbitrary object to the debug text box
+     *
+     * @param obj The object to inspect
+     */
     public void debug(Object obj) {
         debug(obj.toString());
     }
 
+    /** Clear the debug text box */
     public void clearDebug() {
         TextView t = main.findViewById(R.id.debugText);
         t.setText(COMMAND_DEFAULT);
