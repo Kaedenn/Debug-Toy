@@ -1,16 +1,14 @@
 package net.kaedenn.debugtoy;
 
 import android.os.Bundle;
+import android.view.View;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.view.*;
-import android.widget.*;
-
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,15 +18,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //setSupportActionBar((Toolbar)findViewById(R.id.actionBar));
         debug = new DebugTextController(this);
+        selectTab(0);
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                debug.debug("Debugging text");
-                debug.debug(view);
-                showSnack("Replace text with your own action");
+                selectTab(0);
             }
         });
 
@@ -54,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         debug.register(getResources().getString(R.string.cmd_view), new Runnable() {
             @Override
             public void run() {
-                debug.debugView(findViewById(R.id.btDebug));
+                debug.debugView(findViewById(R.id.btTab1));
             }
         }, getResources().getString(R.string.cmd_view_help));
 
@@ -71,6 +69,16 @@ public class MainActivity extends AppCompatActivity {
         };
         debug.register(R.string.cmd_help, helpCommand, R.string.cmd_help_help);
         debug.registerDefault(helpCommand, R.string.cmd_help_help);
+    }
+
+    private void selectTab(int idx) {
+        int[] visible = {View.INVISIBLE, View.INVISIBLE, View.INVISIBLE};
+        if (idx == 0) visible[0] = View.VISIBLE;
+        if (idx == 1) visible[1] = View.VISIBLE;
+        if (idx == 2) visible[2] = View.VISIBLE;
+        findViewById(R.id.tabItem1).setVisibility(visible[0]);
+        findViewById(R.id.tabItem2).setVisibility(visible[1]);
+        findViewById(R.id.tabItem3).setVisibility(visible[2]);
     }
 
     private void showSnack(@NotNull CharSequence text) {
@@ -93,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.btClear:
                 debug.clearDebug();
+                debug.clearDebugCommand();
                 break;
             default:
                 String err_f = getResources().getString(R.string.err_invalid_button_f);
@@ -101,27 +110,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+    public void onTabButtonClick(@NotNull View button) {
+        switch (button.getId()) {
+            case R.id.btTab1:
+                selectTab(0);
+                break;
+            case R.id.btTab2:
+                selectTab(1);
+                break;
+            case R.id.btTab3:
+                selectTab(2);
+                break;
+            default:
+                String err_f = getResources().getString(R.string.err_invalid_button_f);
+                showSnack(String.format(err_f, button.getId()));
+                break;
         }
-
-        return super.onOptionsItemSelected(item);
     }
-    */
 }

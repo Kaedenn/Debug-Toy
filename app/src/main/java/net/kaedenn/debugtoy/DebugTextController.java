@@ -1,11 +1,15 @@
 package net.kaedenn.debugtoy;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-import android.view.*;
-import android.widget.*;
+import android.view.View;
+import android.widget.TextView;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
  * @see java.lang.Runnable
  */
 public final class DebugTextController {
-    private MainActivity main;
+    private final MainActivity main;
     private HashMap<String, Runnable> commands = new HashMap<>();
     private HashMap<String, String> helpTexts = new HashMap<>();
 
@@ -154,16 +158,27 @@ public final class DebugTextController {
 
     /** Execute the command string
      *
-     * @param cmd The command string to execute
+     * @param command The command string to execute
      * @return true if the command was executed, false otherwise
      */
-    public boolean execute(String cmd) {
+    public boolean execute(String command) {
+        String cmd = command;
+        ArrayList<String> args = new ArrayList<>();
+        if (cmd.startsWith("+")) {
+            String[] tokens = cmd.substring(1).split(" ");
+            if (tokens.length > 0) {
+                cmd = tokens[0];
+                for (int i = 1; i < tokens.length; ++i) {
+                    args.add(tokens[i]);
+                }
+            }
+            debug("Executing special command " + cmd);
+            debug("With args " + String.join(", ", args));
+        }
         if (commands.containsKey(cmd)) {
             Runnable action = commands.get(cmd);
-            if (action != null) {
-                action.run();
-                return true;
-            }
+            Objects.requireNonNull(action).run();
+            return true;
         }
         return false;
     }
