@@ -182,13 +182,13 @@ public final class DebugTextController {
      * @return Current content of the debugActionText widget, as a string
      */
     public String getDebugCommand() {
-        TextView t = main.findViewById(R.id.debugActionText);
+        TextView t = main.findViewById(R.id.debugCommand);
         return t.getText().toString();
     }
 
     /** Clear the debugActionText widget's text */
     public void clearDebugCommand() {
-        TextView t = main.findViewById(R.id.debugActionText);
+        TextView t = main.findViewById(R.id.debugCommand);
         t.setText(COMMAND_DEFAULT);
     }
 
