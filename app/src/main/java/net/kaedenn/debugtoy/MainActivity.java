@@ -14,9 +14,9 @@ public class MainActivity extends AppCompatActivity {
 
     private DebugTextController debug;
 
-    static final int TAB1_INDEX = 0;
-    static final int TAB2_INDEX = 1;
-    static final int TAB3_INDEX = 2;
+    private static final int TAB1_INDEX = 0;
+    private static final int TAB2_INDEX = 1;
+    private static final int TAB3_INDEX = 2;
 
     private FloatingActionButton fab;
 

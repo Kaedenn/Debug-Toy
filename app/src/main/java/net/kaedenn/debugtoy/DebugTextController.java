@@ -23,8 +23,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class DebugTextController {
     private final MainActivity main;
-    private HashMap<String, Runnable> commands = new HashMap<>();
-    private HashMap<String, String> commandHelpStrings = new HashMap<>();
+    private final HashMap<String, Runnable> commands = new HashMap<>();
+    private final HashMap<String, String> commandHelpStrings = new HashMap<>();
 
     private static final String COMMAND_DEFAULT = "";
 
