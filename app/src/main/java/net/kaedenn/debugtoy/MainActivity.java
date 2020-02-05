@@ -14,71 +14,46 @@ public class MainActivity extends AppCompatActivity {
 
     private DebugTextController debug;
 
+    static final int TAB1_INDEX = 0;
+    static final int TAB2_INDEX = 1;
+    static final int TAB3_INDEX = 2;
+
+    private FloatingActionButton fab;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //setSupportActionBar((Toolbar)findViewById(R.id.actionBar));
         debug = new DebugTextController(this);
-        selectTab(0);
+        selectTab(TAB1_INDEX);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                selectTab(0);
-            }
-        });
+        fab = findViewById(R.id.fab);
 
-        /* cmd_show_fab command */
-        debug.register(R.string.cmd_show_fab, new Runnable() {
-            @Override
-            public void run() {
-                FloatingActionButton f = findViewById(R.id.fab);
-                f.show();
-            }
-        }, R.string.cmd_show_fab_help);
+        fab.setOnClickListener(view -> selectTab(TAB1_INDEX));
 
-        /* cmd_hide_fab command */
-        debug.register(R.string.cmd_hide_fab, new Runnable() {
-            @Override
-            public void run() {
-                FloatingActionButton f = findViewById(R.id.fab);
-                f.hide();
-            }
-        }, R.string.cmd_hide_fab_help);
+        debug.register(R.string.cmd_show_fab, () -> fab.show(), R.string.cmd_show_fab_help);
 
-        /* cmd_view command */
-        debug.register(getResources().getString(R.string.cmd_view), new Runnable() {
-            @Override
-            public void run() {
-                debug.debugView(findViewById(R.id.btTab1));
-            }
-        }, getResources().getString(R.string.cmd_view_help));
+        debug.register(R.string.cmd_hide_fab, () -> fab.hide(), R.string.cmd_hide_fab_help);
+
+        debug.register(getResources().getString(R.string.cmd_view), () -> debug.debugView(findViewById(R.id.btTab1)), getResources().getString(R.string.cmd_view_help));
 
         /* cmd_help command (and default) */
-        Runnable helpCommand = new Runnable() {
-            @Override
-            public void run() {
-                debug.debug(getResources().getString(R.string.cmd_help_commands));
-                for (String s : debug.getCommands()) {
-                    String helpText = debug.getHelp(s);
-                    debug.debug(String.format("%-8s %s", s, helpText));
-                }
+        Runnable helpCommand = () -> {
+            debug.debug(getResources().getString(R.string.cmd_help_commands));
+            for (String s : debug.getCommands()) {
+                String helpText = debug.getHelp(s);
+                debug.debug(String.format("%-8s %s", s, helpText));
             }
         };
         debug.register(R.string.cmd_help, helpCommand, R.string.cmd_help_help);
         debug.registerDefault(helpCommand, R.string.cmd_help_help);
+
     }
 
     private void selectTab(int idx) {
-        int[] visible = {View.INVISIBLE, View.INVISIBLE, View.INVISIBLE};
-        if (idx == 0) visible[0] = View.VISIBLE;
-        if (idx == 1) visible[1] = View.VISIBLE;
-        if (idx == 2) visible[2] = View.VISIBLE;
-        findViewById(R.id.tabItem1).setVisibility(visible[0]);
-        findViewById(R.id.tabItem2).setVisibility(visible[1]);
-        findViewById(R.id.tabItem3).setVisibility(visible[2]);
+        findViewById(R.id.tabItem1).setVisibility(idx == TAB1_INDEX ? View.VISIBLE : View.INVISIBLE);
+        findViewById(R.id.tabItem2).setVisibility(idx == TAB2_INDEX ? View.VISIBLE : View.INVISIBLE);
+        findViewById(R.id.tabItem3).setVisibility(idx == TAB3_INDEX ? View.VISIBLE : View.INVISIBLE);
     }
 
     private void showSnack(@NotNull CharSequence text) {
@@ -113,13 +88,13 @@ public class MainActivity extends AppCompatActivity {
     public void onTabButtonClick(@NotNull View button) {
         switch (button.getId()) {
             case R.id.btTab1:
-                selectTab(0);
+                selectTab(TAB1_INDEX);
                 break;
             case R.id.btTab2:
-                selectTab(1);
+                selectTab(TAB2_INDEX);
                 break;
             case R.id.btTab3:
-                selectTab(2);
+                selectTab(TAB3_INDEX);
                 break;
             default:
                 String err_f = getResources().getString(R.string.err_invalid_button_f);

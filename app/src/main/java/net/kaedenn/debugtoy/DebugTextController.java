@@ -1,10 +1,8 @@
 package net.kaedenn.debugtoy;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -26,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 public final class DebugTextController {
     private final MainActivity main;
     private HashMap<String, Runnable> commands = new HashMap<>();
-    private HashMap<String, String> helpTexts = new HashMap<>();
+    private HashMap<String, String> commandHelpStrings = new HashMap<>();
 
     private static final String COMMAND_DEFAULT = "";
 
@@ -43,7 +41,7 @@ public final class DebugTextController {
      */
     public void register(@NotNull String cmd, @NotNull Runnable action) {
         String helpText = main.getResources().getString(R.string.cmd_help_default);
-        register(cmd, action, String.format("%8s - %s", cmd, helpText));
+        register(cmd, action, helpText);
     }
 
     /** Register a command by resource ID
@@ -58,6 +56,18 @@ public final class DebugTextController {
         register(cmd, action);
     }
 
+    /** Register a named command with help text and a parameter
+     *
+     * @param cmd Named command to register
+     * @param action UnaryRunnable to execute
+     * @param helpText Help text for this action
+     * @param argument Argument to pass to runnable
+     */
+    public void register(@NotNull String cmd, @NotNull UnaryRunnable action, String helpText, Object argument) {
+        action.bind(argument);
+        register(cmd, action, helpText);
+    }
+
     /** Register a named command with help text
      *
      * @param cmd Named command to register
@@ -66,7 +76,7 @@ public final class DebugTextController {
      */
     public void register(@NotNull String cmd, @NotNull Runnable action, String helpText) {
         commands.put(cmd, action);
-        helpTexts.put(cmd, helpText);
+        commandHelpStrings.put(cmd, helpText);
     }
 
     /** Register a command by resource ID with help text
@@ -79,6 +89,51 @@ public final class DebugTextController {
         String cmd = main.getResources().getString(cmdResId);
         String help = main.getResources().getString(helpResId);
         register(cmd, action, help);
+    }
+
+    /** Register a command by resource ID with help text and a parameter
+     *
+     * @param cmdResId String resource ID for the command to register
+     * @param action UnaryRunnable to execute
+     * @param helpResId String resource ID for the command's help text
+     * @param argument Argument to pass to runnable
+     */
+    public void register(int cmdResId, @NotNull UnaryRunnable action, int helpResId, Object argument) {
+        action.bind(argument);
+        register(cmdResId, action, helpResId);
+    }
+
+    /** Bind an argument to a UnaryRunnable command
+     *
+     * This function does nothing if the command doesn't exist or isn't a UnaryRunnable.
+     *
+     * @param cmd Named command to modify
+     * @param arg Argument object
+     */
+    public void bindArgumentToCommand(@NotNull String cmd, Object arg) {
+        if (commands.containsKey(cmd)) {
+            Runnable r = commands.get(cmd);
+            if (r instanceof UnaryRunnable) {
+                ((UnaryRunnable) r).bind(arg);
+            }
+        }
+    }
+
+    /** Bind an argument to a UnaryRunnable command
+     *
+     * This function does nothing if the command doesn't exist or isn't a UnaryRunnable.
+     *
+     * @param cmdResId Named command to modify
+     * @param arg Argument object
+     */
+    public void bindArgumentToCommand(int cmdResId, Object arg) {
+        String cmd = main.getResources().getString(cmdResId);
+        if (commands.containsKey(cmd)) {
+            Runnable r = commands.get(cmd);
+            if (r instanceof UnaryRunnable) {
+                ((UnaryRunnable) r).bind(arg);
+            }
+        }
     }
 
     /** Register a default command (i.e. the empty string)
@@ -96,7 +151,7 @@ public final class DebugTextController {
      */
     public void registerDefault(@NotNull Runnable action, String helpText) {
         commands.put(COMMAND_DEFAULT, action);
-        helpTexts.put(COMMAND_DEFAULT, helpText);
+        commandHelpStrings.put(COMMAND_DEFAULT, helpText);
     }
 
     /** Register the default command with the help text defined by a resource ID
@@ -137,8 +192,8 @@ public final class DebugTextController {
      * @return The help text issued when the command was registered
      */
     public String getHelp(String cmd) {
-        if (helpTexts.containsKey(cmd)) {
-            return helpTexts.get(cmd);
+        if (commandHelpStrings.containsKey(cmd)) {
+            return commandHelpStrings.get(cmd);
         }
         return null;
     }
