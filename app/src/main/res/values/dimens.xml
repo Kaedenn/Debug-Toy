@@ -1,6 +1,5 @@
 <resources>
-    <dimen name="fab_margin">16dp</dimen>
-    <dimen name="fab_max_image_size">64dp</dimen>
     <dimen name="btns_height">42dp</dimen>
     <dimen name="debug_text_size">12sp</dimen>
+    <dimen name="button_text_size">14sp</dimen>
 </resources>
