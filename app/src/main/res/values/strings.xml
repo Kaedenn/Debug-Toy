@@ -1,17 +1,19 @@
 <resources>
+    <!-- Text displayed on views inside the application's UI -->
     <string name="app_name">Debug Toy</string>
     <string name="action_settings">Settings</string>
     <string name="debug_button_text">Run</string>
     <string name="clear_button_text">Clear</string>
+    <string name="clear_all_button_text">Clear All</string>
     <string name="debug_text_hint">Debugging Text</string>
     <string name="debug_command_hint">Debug Command</string>
 
-    <!-- Navigation objects -->
     <string name="tab1_button">Tab 1</string>
     <string name="tab2_button">Tab 2</string>
     <string name="tab3_button">Tab 3</string>
+
     <!-- Error messages and error formats -->
-    <string name="err_no_cmd_f">"Failed to execute command "%s": no such command"</string>
+    <string name="err_no_cmd_f">Failed to execute command "%s": no such command</string>
     <string name="err_invalid_button_f">Unknown button with ID %d</string>
 
     <!-- Commands and their help texts -->
@@ -24,5 +26,4 @@
     <string name="cmd_hide_fab_help">Hide floating action button</string>
     <!-- Default help text for when command has no help string -->
     <string name="cmd_help_default">Custom command with no help string</string>
-    <string name="cmd_extended">Extended command</string>
 </resources>

@@ -1,13 +1,9 @@
 package net.kaedenn.debugtoy;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.Set;
 
-import android.view.View;
 import android.widget.TextView;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,14 +20,11 @@ public final class DebugTextController {
     private final MainActivity main;
     private final HashMap<String, Command> commands = new HashMap<>();
 
-    public static final String COMMAND_DEFAULT = "";
-    public static final String EXTENDED_COMMAND_CHR = "!";
-
     DebugTextController(@NotNull MainActivity mainActivity) {
         main = mainActivity;
     }
 
-    /** Register a named command
+    /** Register a named command.
      *
      * The help text defaults to the {@code cmd_help_default} resource string.
      *
@@ -42,42 +35,7 @@ public final class DebugTextController {
         commands.put(cmd, action);
     }
 
-    /** Get all declared commands, except for the default (if present)
-     *
-     * @return A collection of commands, without the default command.
-     */
-    public Collection<String> getCommands() {
-        Set<String> cmdSet = commands.keySet();
-        cmdSet.remove(COMMAND_DEFAULT);
-        return cmdSet;
-    }
-
-    /** Get the action defined for the command
-     *
-     * @param cmd Named command to look up
-     * @return The Command action bound to the command
-     */
-    public Command getAction(String cmd) {
-        if (commands.containsKey(cmd)) {
-            return commands.get(cmd);
-        }
-        return null;
-    }
-
-    /** Get the help text defined for the command
-     *
-     * @param cmd Named command to look up
-     * @return The help text issued when the command was registered
-     */
-    public String getHelp(String cmd) {
-        if (commands.containsKey(cmd)) {
-            Command c = commands.get(cmd);
-            return Objects.requireNonNull(c).getHelpText();
-        }
-        return null;
-    }
-
-    /** Removes a command entirely
+    /** Removes a command entirely.
      *
      * @param cmd The command to remove
      */
@@ -85,40 +43,41 @@ public final class DebugTextController {
         commands.remove(cmd);
     }
 
-    /** Removes the default command */
-    public void unregisterDefault() {
-        commands.remove(COMMAND_DEFAULT);
+    /** Get all declared commands, except for the default (if present).
+     *
+     * @return A collection of commands, without the default command.
+     */
+    public Collection<String> getCommands() {
+        return commands.keySet();
     }
 
-    /** Execute the command string
+    /** Execute the command string.
      *
      * @param command The command string to execute
      * @return The object returned by the command, or null if no command was ran
      */
     public void execute(String command) {
-        String cmd = command;
-        ArrayList<String> args = new ArrayList<>();
-        debug("Requested to run '" + command + "'");
-        if (cmd.startsWith(EXTENDED_COMMAND_CHR)) {
-            String[] tokens = cmd.split(" ");
-            if (tokens.length > 0) {
-                cmd = tokens[0];
-                args.addAll(Arrays.asList(tokens).subList(1, tokens.length));
-            }
+        if (command == null || command.length() == 0) {
+            /* Prevent meaningless execution */
+            return;
         }
-        debug("Running command " + cmd);
+        /* Split the first word (command) with the rest (arguments) */
+        String[] words = command.split(" ", 2);
+        String cmd = words[0];
+        String args = (words.length == 1) ? "" : words[1];
+        debug(String.format("Executing \"%s\" with \"%s\"", cmd, args));
         if (cmd.equals(main.getResources().getString(R.string.cmd_help))) {
+            /* Handle the special help command */
             executeHelpCommand();
         } else if (commands.containsKey(cmd)) {
+            /* Handle a generic command */
             Command action = Objects.requireNonNull(commands.get(cmd));
-            for (Object arg : args) {
-                action.bindArgument(arg);
-            }
+            action.bindArgument(args);
             action.execute();
         }
     }
 
-    /** Return whether or not the command is registered
+    /** Return whether or not the command is registered.
      *
      * @param cmd The named command to examine
      * @return true if the command is bound, false otherwise
@@ -126,15 +85,15 @@ public final class DebugTextController {
     public boolean isRegistered(String cmd) {
         if (cmd.equals(main.getResources().getString(R.string.cmd_help))) {
             return true;
-        } else if (cmd.startsWith(EXTENDED_COMMAND_CHR)) {
-            String[] tokens = cmd.split(" ");
-            return commands.containsKey(tokens[0]);
+        } else if (cmd.contains(" ")) {
+            String c = cmd.split(" ", 2)[0];
+            return commands.containsKey(c);
         } else {
             return commands.containsKey(cmd);
         }
     }
 
-    /** Get the content of the debugActionText widget
+    /** Get the content of the debugActionText widget.
      *
      * @return Current content of the debugActionText widget, as a string
      */
@@ -143,13 +102,15 @@ public final class DebugTextController {
         return t.getText().toString();
     }
 
-    /** Clear the debugActionText widget's text */
+    /** Clear the debugActionText widget's text.
+     *
+     */
     public void clearDebugCommand() {
         TextView t = main.findViewById(R.id.debugCommand);
-        t.setText(COMMAND_DEFAULT);
+        t.setText("");
     }
 
-    /** Append a line to the debug text box
+    /** Append a line to the debug text box.
      *
      * @param text The text to append
      */
@@ -159,41 +120,23 @@ public final class DebugTextController {
         t.append("\n");
     }
 
-    /** Append a dump of the given view to the debug text box
+    /** Clear the debug text box.
      *
-     * @param view The view to inspect
      */
-    public void debugView(View view) {
-        /* TODO: add more attributes */
-        this.debug(view.getClass().getTypeName());
-        this.debug(view.toString());
-    }
-
-    /** Dump an arbitrary object to the debug text box
-     *
-     * @param obj The object to inspect
-     */
-    public void debug(Object obj) {
-        debug(obj.toString());
-    }
-
-    /** Clear the debug text box */
     public void clearDebug() {
         TextView t = main.findViewById(R.id.debugText);
-        t.setText(COMMAND_DEFAULT);
+        t.setText("");
     }
 
-    /** Executes the special command "help"
+    /** Executes the special command "help".
      *
      */
     private void executeHelpCommand() {
         for (String cmd : commands.keySet()) {
             String help = Objects.requireNonNull(commands.get(cmd)).getHelpText();
-            if (help == null) {
+            if (help == null || help.isEmpty()) {
+                /* Provide default help string for commands without help text */
                 help = main.getResources().getString(R.string.cmd_help_default);
-            }
-            if (cmd.equals(EXTENDED_COMMAND_CHR)) {
-                help = main.getResources().getString(R.string.cmd_extended) + ": " + help;
             }
             debug(String.format("%8s - %s", cmd, help));
         }
