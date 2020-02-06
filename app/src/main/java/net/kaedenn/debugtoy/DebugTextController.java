@@ -1,6 +1,7 @@
 package net.kaedenn.debugtoy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
@@ -18,15 +19,13 @@ import org.jetbrains.annotations.NotNull;
  *
  * If the help text is omitted, then the default resource string
  * {@code cmd_help_default} is used.
- *
- * @see java.lang.Runnable
  */
 public final class DebugTextController {
     private final MainActivity main;
-    private final HashMap<String, Runnable> commands = new HashMap<>();
-    private final HashMap<String, String> commandHelpStrings = new HashMap<>();
+    private final HashMap<String, Command> commands = new HashMap<>();
 
-    private static final String COMMAND_DEFAULT = "";
+    public static final String COMMAND_DEFAULT = "";
+    public static final String EXTENDED_COMMAND_CHR = "!";
 
     DebugTextController(@NotNull MainActivity mainActivity) {
         main = mainActivity;
@@ -36,132 +35,11 @@ public final class DebugTextController {
      *
      * The help text defaults to the {@code cmd_help_default} resource string.
      *
-     * @param cmd Named command to register
-     * @param action Runnable to execute
+     * @param action Command to execute
      */
-    public void register(@NotNull String cmd, @NotNull Runnable action) {
-        String helpText = main.getResources().getString(R.string.cmd_help_default);
-        register(cmd, action, helpText);
-    }
-
-    /** Register a command by resource ID
-     *
-     * The help text defaults to the {@code cmd_help_default} resource string.
-     *
-     * @param cmdResId String resource ID for the command to register
-     * @param action Runnable to execute
-     */
-    public void register(int cmdResId, @NotNull Runnable action) {
-        String cmd = main.getResources().getString(cmdResId);
-        register(cmd, action);
-    }
-
-    /** Register a named command with help text and a parameter
-     *
-     * @param cmd Named command to register
-     * @param action UnaryRunnable to execute
-     * @param helpText Help text for this action
-     * @param argument Argument to pass to runnable
-     */
-    public void register(@NotNull String cmd, @NotNull UnaryRunnable action, String helpText, Object argument) {
-        action.bind(argument);
-        register(cmd, action, helpText);
-    }
-
-    /** Register a named command with help text
-     *
-     * @param cmd Named command to register
-     * @param action Runnable to execute
-     * @param helpText Help text for this action
-     */
-    public void register(@NotNull String cmd, @NotNull Runnable action, String helpText) {
+    public void register(@NotNull Command action) {
+        String cmd = action.getCommand();
         commands.put(cmd, action);
-        commandHelpStrings.put(cmd, helpText);
-    }
-
-    /** Register a command by resource ID with help text
-     *
-     * @param cmdResId String resource ID for the command to register
-     * @param action Runnable to execute
-     * @param helpResId String resource ID for the command's help text
-     */
-    public void register(int cmdResId, @NotNull Runnable action, int helpResId) {
-        String cmd = main.getResources().getString(cmdResId);
-        String help = main.getResources().getString(helpResId);
-        register(cmd, action, help);
-    }
-
-    /** Register a command by resource ID with help text and a parameter
-     *
-     * @param cmdResId String resource ID for the command to register
-     * @param action UnaryRunnable to execute
-     * @param helpResId String resource ID for the command's help text
-     * @param argument Argument to pass to runnable
-     */
-    public void register(int cmdResId, @NotNull UnaryRunnable action, int helpResId, Object argument) {
-        action.bind(argument);
-        register(cmdResId, action, helpResId);
-    }
-
-    /** Bind an argument to a UnaryRunnable command
-     *
-     * This function does nothing if the command doesn't exist or isn't a UnaryRunnable.
-     *
-     * @param cmd Named command to modify
-     * @param arg Argument object
-     */
-    public void bindArgumentToCommand(@NotNull String cmd, Object arg) {
-        if (commands.containsKey(cmd)) {
-            Runnable r = commands.get(cmd);
-            if (r instanceof UnaryRunnable) {
-                ((UnaryRunnable) r).bind(arg);
-            }
-        }
-    }
-
-    /** Bind an argument to a UnaryRunnable command
-     *
-     * This function does nothing if the command doesn't exist or isn't a UnaryRunnable.
-     *
-     * @param cmdResId Named command to modify
-     * @param arg Argument object
-     */
-    public void bindArgumentToCommand(int cmdResId, Object arg) {
-        String cmd = main.getResources().getString(cmdResId);
-        if (commands.containsKey(cmd)) {
-            Runnable r = commands.get(cmd);
-            if (r instanceof UnaryRunnable) {
-                ((UnaryRunnable) r).bind(arg);
-            }
-        }
-    }
-
-    /** Register a default command (i.e. the empty string)
-     *
-     * @param action Runnable to execute
-     */
-    public void registerDefault(@NotNull Runnable action) {
-        registerDefault(action, main.getResources().getString(R.string.cmd_help_default));
-    }
-
-    /** Register a default command (i.e. the empty string)
-     *
-     * @param action Runnable to execute
-     * @param helpText Help text for this default action
-     */
-    public void registerDefault(@NotNull Runnable action, String helpText) {
-        commands.put(COMMAND_DEFAULT, action);
-        commandHelpStrings.put(COMMAND_DEFAULT, helpText);
-    }
-
-    /** Register the default command with the help text defined by a resource ID
-     *
-     * @param action Runnable to execute
-     * @param helpResId String resource ID for the command's help text
-     */
-    public void registerDefault(@NotNull Runnable action, int helpResId) {
-        String help = main.getResources().getString(helpResId);
-        registerDefault(action, help);
     }
 
     /** Get all declared commands, except for the default (if present)
@@ -177,9 +55,9 @@ public final class DebugTextController {
     /** Get the action defined for the command
      *
      * @param cmd Named command to look up
-     * @return The Runnable action bound to the command
+     * @return The Command action bound to the command
      */
-    public Runnable getAction(String cmd) {
+    public Command getAction(String cmd) {
         if (commands.containsKey(cmd)) {
             return commands.get(cmd);
         }
@@ -192,8 +70,9 @@ public final class DebugTextController {
      * @return The help text issued when the command was registered
      */
     public String getHelp(String cmd) {
-        if (commandHelpStrings.containsKey(cmd)) {
-            return commandHelpStrings.get(cmd);
+        if (commands.containsKey(cmd)) {
+            Command c = commands.get(cmd);
+            return Objects.requireNonNull(c).getHelpText();
         }
         return null;
     }
@@ -214,28 +93,29 @@ public final class DebugTextController {
     /** Execute the command string
      *
      * @param command The command string to execute
-     * @return true if the command was executed, false otherwise
+     * @return The object returned by the command, or null if no command was ran
      */
-    public boolean execute(String command) {
+    public void execute(String command) {
         String cmd = command;
         ArrayList<String> args = new ArrayList<>();
-        if (cmd.startsWith("+")) {
-            String[] tokens = cmd.substring(1).split(" ");
+        debug("Requested to run '" + command + "'");
+        if (cmd.startsWith(EXTENDED_COMMAND_CHR)) {
+            String[] tokens = cmd.split(" ");
             if (tokens.length > 0) {
                 cmd = tokens[0];
-                for (int i = 1; i < tokens.length; ++i) {
-                    args.add(tokens[i]);
-                }
+                args.addAll(Arrays.asList(tokens).subList(1, tokens.length));
             }
-            debug("Executing special command " + cmd);
-            debug("With args " + String.join(", ", args));
         }
-        if (commands.containsKey(cmd)) {
-            Runnable action = commands.get(cmd);
-            Objects.requireNonNull(action).run();
-            return true;
+        debug("Running command " + cmd);
+        if (cmd.equals(main.getResources().getString(R.string.cmd_help))) {
+            executeHelpCommand();
+        } else if (commands.containsKey(cmd)) {
+            Command action = Objects.requireNonNull(commands.get(cmd));
+            for (Object arg : args) {
+                action.bindArgument(arg);
+            }
+            action.execute();
         }
-        return false;
     }
 
     /** Return whether or not the command is registered
@@ -244,7 +124,14 @@ public final class DebugTextController {
      * @return true if the command is bound, false otherwise
      */
     public boolean isRegistered(String cmd) {
-        return commands.containsKey(cmd);
+        if (cmd.equals(main.getResources().getString(R.string.cmd_help))) {
+            return true;
+        } else if (cmd.startsWith(EXTENDED_COMMAND_CHR)) {
+            String[] tokens = cmd.split(" ");
+            return commands.containsKey(tokens[0]);
+        } else {
+            return commands.containsKey(cmd);
+        }
     }
 
     /** Get the content of the debugActionText widget
@@ -294,6 +181,22 @@ public final class DebugTextController {
     public void clearDebug() {
         TextView t = main.findViewById(R.id.debugText);
         t.setText(COMMAND_DEFAULT);
+    }
+
+    /** Executes the special command "help"
+     *
+     */
+    private void executeHelpCommand() {
+        for (String cmd : commands.keySet()) {
+            String help = Objects.requireNonNull(commands.get(cmd)).getHelpText();
+            if (help == null) {
+                help = main.getResources().getString(R.string.cmd_help_default);
+            }
+            if (cmd.equals(EXTENDED_COMMAND_CHR)) {
+                help = main.getResources().getString(R.string.cmd_extended) + ": " + help;
+            }
+            debug(String.format("%8s - %s", cmd, help));
+        }
     }
 
 }

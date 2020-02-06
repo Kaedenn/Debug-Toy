@@ -10,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     private DebugTextController debug;
@@ -31,23 +33,20 @@ public class MainActivity extends AppCompatActivity {
 
         fab.setOnClickListener(view -> selectTab(TAB1_INDEX));
 
-        debug.register(R.string.cmd_show_fab, () -> fab.show(), R.string.cmd_show_fab_help);
+        debug.register(new Command(getResources().getString(R.string.cmd_show_fab), o -> fab.show(), getResources().getString(R.string.cmd_show_fab_help)));
+        debug.register(new Command(getResources().getString(R.string.cmd_hide_fab), o -> fab.hide(), getResources().getString(R.string.cmd_hide_fab_help)));
 
-        debug.register(R.string.cmd_hide_fab, () -> fab.hide(), R.string.cmd_hide_fab_help);
-
-        debug.register(getResources().getString(R.string.cmd_view), () -> debug.debugView(findViewById(R.id.btTab1)), getResources().getString(R.string.cmd_view_help));
-
-        /* cmd_help command (and default) */
-        Runnable helpCommand = () -> {
-            debug.debug(getResources().getString(R.string.cmd_help_commands));
-            for (String s : debug.getCommands()) {
-                String helpText = debug.getHelp(s);
-                debug.debug(String.format("%-8s %s", s, helpText));
+        debug.register(new Command(DebugTextController.EXTENDED_COMMAND_CHR, o -> {
+            if (o.length > 0) {
+                ArrayList<String> a = new ArrayList<>();
+                for (Object i : o) {
+                    a.add(i.toString());
+                }
+                debug.debug("Called extended function with arguments " + String.join(", ", a));
+            } else {
+                debug.debug("Called extended function with no arguments");
             }
-        };
-        debug.register(R.string.cmd_help, helpCommand, R.string.cmd_help_help);
-        debug.registerDefault(helpCommand, R.string.cmd_help_help);
-
+        }, "system command"));
     }
 
     private void selectTab(int idx) {
@@ -61,15 +60,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showSnack(@NotNull View view, @NotNull CharSequence text) {
-        Snackbar.make(view, text, Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show();
+        Snackbar.make(view, text, Snackbar.LENGTH_LONG).setAction("Action", null).show();
     }
 
     public void onButtonClick(@NotNull View button) {
         String cmd = debug.getDebugCommand();
         switch (button.getId()) {
             case R.id.btDebug:
-                if (!debug.execute(cmd)) {
+                if (debug.isRegistered(cmd)) {
+                    debug.execute(cmd);
+                } else {
                     String err_f = getResources().getString(R.string.err_no_cmd_f);
                     showSnack(String.format(err_f, cmd));
                 }
