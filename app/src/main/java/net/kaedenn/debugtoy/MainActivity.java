@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private View page3 = null;
     private View currentPage = null;
 
+    public static MainActivity self;
+
     /** Create the activity.
      *
      * This function also registers the primary commands that the
@@ -45,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        self = this;
         debug = new DebugTextController(this);
         surfaceController = new SurfacePageController(this);
         /* Select page1 */

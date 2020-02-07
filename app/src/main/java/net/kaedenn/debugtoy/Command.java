@@ -23,11 +23,11 @@ import java.util.function.Consumer;
  *
  * @see java.util.function.Consumer
  */
-public class Command {
-    protected String cmd;
-    protected Consumer<String> action;
-    protected String helpText;
-    protected String arguments;
+class Command {
+    private String cmd;
+    private Consumer<String> action;
+    private String helpText;
+    private String arguments;
 
     /** Construct a command.
      *
@@ -35,7 +35,7 @@ public class Command {
      * @param function A {@code Consumer<String>} instance
      * @param help A help string to display when the user wants help text
      */
-    protected Command(String command, @NotNull Consumer<String> function, String help) {
+    Command(String command, @NotNull Consumer<String> function, String help) {
         cmd = command;
         action = function;
         helpText = help;
@@ -46,7 +46,7 @@ public class Command {
      *
      * @return Command name
      */
-    public String getCommand() {
+    String getCommand() {
         return cmd;
     }
 
@@ -54,7 +54,7 @@ public class Command {
      *
      * @return Command help text
      */
-    public String getHelpText() {
+    String getHelpText() {
         return helpText;
     }
 
@@ -66,7 +66,7 @@ public class Command {
      *
      * @param arg The argument to add to the list of arguments.
      */
-    public void bindArgument(String arg) {
+    void bindArgument(String arg) {
         arguments = arg;
     }
 
@@ -77,7 +77,7 @@ public class Command {
      * array is passed instead. It is up to the function to determine what to do
      * with the arguments.
      */
-    public void execute() {
+    void execute() {
         if (arguments != null) {
             action.accept(arguments);
         } else {

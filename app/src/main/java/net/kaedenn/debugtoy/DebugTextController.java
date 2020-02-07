@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
  * If the help text is omitted, then the default resource string
  * {@code cmd_help_default} is used.
  */
-public final class DebugTextController {
+final class DebugTextController {
     private final MainActivity main;
     private final HashMap<String, Command> commands = new HashMap<>();
 
@@ -30,7 +30,7 @@ public final class DebugTextController {
      *
      * @param action Command to execute
      */
-    public void register(@NotNull Command action) {
+    void register(@NotNull Command action) {
         String cmd = action.getCommand();
         commands.put(cmd, action);
     }
@@ -39,7 +39,7 @@ public final class DebugTextController {
      *
      * @param cmd The command to remove
      */
-    public void unregister(String cmd) {
+    void unregister(String cmd) {
         commands.remove(cmd);
     }
 
@@ -47,7 +47,7 @@ public final class DebugTextController {
      *
      * @return A collection of commands, without the default command.
      */
-    public Collection<String> getCommands() {
+    Collection<String> getCommands() {
         return commands.keySet();
     }
 
@@ -56,7 +56,7 @@ public final class DebugTextController {
      * @param command The command string to execute
      * @return The object returned by the command, or null if no command was ran
      */
-    public void execute(String command) {
+    void execute(String command) {
         if (command == null || command.length() == 0) {
             /* Prevent meaningless execution */
             return;
@@ -82,7 +82,7 @@ public final class DebugTextController {
      * @param cmd The named command to examine
      * @return true if the command is bound, false otherwise
      */
-    public boolean isRegistered(String cmd) {
+    boolean isRegistered(String cmd) {
         if (cmd.equals(main.getResources().getString(R.string.cmd_help))) {
             return true;
         } else if (cmd.contains(" ")) {
@@ -97,7 +97,7 @@ public final class DebugTextController {
      *
      * @return Current content of the debugActionText widget, as a string
      */
-    public String getDebugCommand() {
+    String getDebugCommand() {
         TextView t = main.findViewById(R.id.debugCommand);
         return t.getText().toString();
     }
@@ -105,7 +105,7 @@ public final class DebugTextController {
     /** Clear the debugActionText widget's text.
      *
      */
-    public void clearDebugCommand() {
+    void clearDebugCommand() {
         TextView t = main.findViewById(R.id.debugCommand);
         t.setText("");
     }
@@ -114,7 +114,7 @@ public final class DebugTextController {
      *
      * @param text The text to append
      */
-    public void debug(CharSequence text) {
+    void debug(CharSequence text) {
         TextView t = main.findViewById(R.id.debugText);
         t.append(text);
         t.append("\n");
@@ -123,7 +123,7 @@ public final class DebugTextController {
     /** Clear the debug text box.
      *
      */
-    public void clearDebug() {
+    void clearDebug() {
         TextView t = main.findViewById(R.id.debugText);
         t.setText("");
     }
