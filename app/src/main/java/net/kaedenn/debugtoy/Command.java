@@ -78,11 +78,7 @@ class Command {
      * with the arguments.
      */
     void execute() {
-        if (arguments != null) {
-            action.accept(arguments);
-        } else {
-            action.accept("");
-        }
+        action.accept(arguments == null ? "" : arguments);
     }
 }
 

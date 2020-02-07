@@ -1,5 +1,6 @@
 package net.kaedenn.debugtoy;
 
+import android.annotation.SuppressLint;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -45,9 +46,9 @@ class DTAnimation extends TimerTask {
             this.dy += dy;
         }
 
-        @NonNull
-        @Override
-        public String toString() {
+        @SuppressWarnings("unused")
+        @SuppressLint("DefaultLocale")
+        public String toDebugString() {
             return String.format("Particle(%g, %g, %g, %g %g, %g", x, y, w, h, dx, dy);
         }
     }

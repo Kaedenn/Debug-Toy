@@ -39,6 +39,7 @@ final class DebugTextController {
      *
      * @param cmd The command to remove
      */
+    @SuppressWarnings("unused")
     void unregister(String cmd) {
         commands.remove(cmd);
     }
@@ -54,7 +55,6 @@ final class DebugTextController {
     /** Execute the command string.
      *
      * @param command The command string to execute
-     * @return The object returned by the command, or null if no command was ran
      */
     void execute(String command) {
         if (command == null || command.length() == 0) {

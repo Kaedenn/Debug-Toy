@@ -34,8 +34,6 @@ public class MainActivity extends AppCompatActivity {
     private View page3 = null;
     private View currentPage = null;
 
-    public static MainActivity self;
-
     /** Create the activity.
      *
      * This function also registers the primary commands that the
@@ -47,10 +45,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        self = this;
-        debug = new DebugTextController(this);
-        surfaceController = new SurfacePageController(this);
-        /* Select page1 */
+
+        /* Select page1 directly */
         page1 = findViewById(R.id.page1);
         page2 = findViewById(R.id.page2);
         page3 = findViewById(R.id.page3);
@@ -62,6 +58,9 @@ public class MainActivity extends AppCompatActivity {
         /* TODO: Allow swiping between pages and remove the page buttons entirely */
 
         /* Setup for page 1 */
+
+        /* Create the debug text controller */
+        debug = new DebugTextController(this);
 
         /* Register the "env" command */
         debug.register(new Command("env", arg -> {
@@ -100,11 +99,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }, getResources().getString(R.string.cmd_run_help)));
 
-        /* TODO: Setup for page 2
-         *
-         * Need function running periodically. Separate thread maybe? Can the
-         * surface be modified from a different thread?
-         */
+        /* Setup for page 2 */
+        surfaceController = new SurfacePageController(this);
 
         /* TODO: Setup for page 3 */
 
