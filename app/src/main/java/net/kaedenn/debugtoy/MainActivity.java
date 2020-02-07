@@ -1,5 +1,7 @@
 package net.kaedenn.debugtoy;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.os.Bundle;
 import android.view.View;
 
@@ -21,13 +23,16 @@ import java.util.concurrent.TimeUnit;
  */
 public class MainActivity extends AppCompatActivity {
 
-    /* Controller for the first tab's objects */
+    /* Controller for the first page's objects */
     private DebugTextController debug;
 
-    /* Indexes for the three tabs (TODO: REMOVE) */
-    private static final int TAB1_INDEX = 0;
-    private static final int TAB2_INDEX = 1;
-    private static final int TAB3_INDEX = 2;
+    /* Controller for the second page's objects */
+    private SurfacePageController surfaceController;
+
+    private View page1 = null;
+    private View page2 = null;
+    private View page3 = null;
+    private View currentPage = null;
 
     /** Create the activity.
      *
@@ -41,11 +46,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         debug = new DebugTextController(this);
-        selectTab(TAB1_INDEX);
+        surfaceController = new SurfacePageController(this);
+        /* Select page1 */
+        page1 = findViewById(R.id.page1);
+        page2 = findViewById(R.id.page2);
+        page3 = findViewById(R.id.page3);
+        page1.setVisibility(View.VISIBLE);
+        page2.setVisibility(View.GONE);
+        page3.setVisibility(View.GONE);
+        currentPage = page1;
 
-        /* TODO: Allow swiping between tabs and remove the tab buttons entirely */
+        /* TODO: Allow swiping between pages and remove the page buttons entirely */
 
-        /* Setup for tab 1 */
+        /* Setup for page 1 */
 
         /* Register the "env" command */
         debug.register(new Command("env", arg -> {
@@ -84,48 +97,46 @@ public class MainActivity extends AppCompatActivity {
             }
         }, getResources().getString(R.string.cmd_run_help)));
 
-        /* TODO: Setup for tab 2
+        /* TODO: Setup for page 2
          *
          * Need function running periodically. Separate thread maybe? Can the
          * surface be modified from a different thread?
          */
 
-        /* TODO: Setup for tab 3 */
+        /* TODO: Setup for page 3 */
 
     }
 
-    /** Change the active tab by its numerical index.
+    /** Change the active page.
      *
-     * Tab indexes are not tab IDs. The index-to-ID association is as follows:
-     *   {@link MainActivity#TAB1_INDEX} maps to {@code R.id.tabItem1}
-     *   {@link MainActivity#TAB2_INDEX} maps to {@code R.id.tabItem2}
-     *   {@link MainActivity#TAB3_INDEX} maps to {@code R.id.tabItem3}
-     *
-     * @param idx The tab index (a TABn_INDEX numeric constant)
+     * @param targetPage The page to move to
      */
-    public void selectTab(int idx) {
-        int[] tabIDs = {R.id.tabItem1, R.id.tabItem2, R.id.tabItem3};
-        int currentTab = getCurrentTab();
-        if (idx != currentTab && idx >= TAB1_INDEX && idx <= TAB3_INDEX) {
-            /* TODO: Show slide transition */
-            /* TODO: Make the new slide visible */
-            findViewById(tabIDs[idx]).setVisibility(View.VISIBLE);
+    public void selectPage(View targetPage) {
+        View currentView = currentPage;
+        if (currentView != null && targetPage != null && currentView != targetPage) {
+            targetPage.setAlpha(0);
+            targetPage.setVisibility(View.VISIBLE);
+            targetPage.animate()
+                    .alpha(1f)
+                    .setDuration(500)
+                    .setListener(null);
+            currentView.animate()
+                    .alpha(0f)
+                    .setDuration(500)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            currentView.setVisibility(View.GONE);
+                        }
+                    });
+            /* Handle code unique to each page */
+            if (targetPage == page2) {
+                surfaceController.doAppear();
+            } else if (currentPage == page2) {
+                surfaceController.doDisappear();
+            }
         }
-        findViewById(R.id.tabItem1).setVisibility(idx == TAB1_INDEX ? View.VISIBLE : View.INVISIBLE);
-        findViewById(R.id.tabItem2).setVisibility(idx == TAB2_INDEX ? View.VISIBLE : View.INVISIBLE);
-        findViewById(R.id.tabItem3).setVisibility(idx == TAB3_INDEX ? View.VISIBLE : View.INVISIBLE);
-    }
-
-    /** Get the current tab index.
-     *
-     * @return The index for the current tab
-     */
-    public int getCurrentTab() {
-        /* TODO: Remove references to tab indexes */
-        if (findViewById(R.id.tabItem1).getVisibility() == View.VISIBLE) return TAB1_INDEX;
-        if (findViewById(R.id.tabItem2).getVisibility() == View.VISIBLE) return TAB2_INDEX;
-        if (findViewById(R.id.tabItem3).getVisibility() == View.VISIBLE) return TAB3_INDEX;
-        return -1;
+        currentPage = targetPage;
     }
 
     /** Show a "Snack Bar" message.
@@ -147,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
         Snackbar.make(view, text, Snackbar.LENGTH_LONG).setAction("Action", null).show();
     }
 
-    /** Handle clicking of one of the first tab's buttons.
+    /** Handle clicking of one of the first page's buttons.
      *
      * This function is called when either the "Debug" or "Clear" buttons are
      * clicked by the user.
@@ -188,14 +199,14 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onTabButtonClick(@NotNull View button) {
         switch (button.getId()) {
-            case R.id.btTab1:
-                selectTab(TAB1_INDEX);
+            case R.id.btPage1:
+                selectPage(page1);
                 break;
-            case R.id.btTab2:
-                selectTab(TAB2_INDEX);
+            case R.id.btPage2:
+                selectPage(page2);
                 break;
-            case R.id.btTab3:
-                selectTab(TAB3_INDEX);
+            case R.id.btPage3:
+                selectPage(page3);
                 break;
             default:
                 String err_f = getResources().getString(R.string.err_invalid_button_f);

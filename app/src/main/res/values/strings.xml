@@ -7,9 +7,9 @@
     <string name="clear_all_button_text">Clear All</string>
     <string name="debug_text_hint">Debugging Text</string>
     <string name="debug_command_hint">Debug Command</string>
-    <string name="tab1_button">Tab 1</string>
-    <string name="tab2_button">Tab 2</string>
-    <string name="tab3_button">Tab 3</string>
+    <string name="page1_button">Page 1</string>
+    <string name="page2_button">Page 2</string>
+    <string name="page3_button">Page 3</string>
 
     <!-- Error messages and strings -->
     <string name="err_no_cmd_f">Failed to execute command "%s": no such command</string>

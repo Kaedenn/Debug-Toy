@@ -10,29 +10,31 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        tools:visibility="visible">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/tabLayout"
+            android:id="@+id/pagesLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@id/tabButtons"
+            app:layout_constraintBottom_toTopOf="@id/pageButtons"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <RelativeLayout
-                android:id="@+id/tabItem1"
+                android:id="@+id/page1"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
+                android:visibility="visible"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:visibility="invisible">
+                tools:visibility="gone">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/tab1Constraint"
+                    android:id="@+id/page1Constraint"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_alignParentStart="true"
@@ -141,9 +143,10 @@
             </RelativeLayout>
 
             <RelativeLayout
-                android:id="@+id/tabItem2"
+                android:id="@+id/page2"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
+                android:visibility="invisible"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -151,13 +154,14 @@
                 tools:visibility="visible">
 
                 <SurfaceView
-                    android:id="@+id/tab2Surface"
+                    android:id="@+id/page2Surface"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    android:clickable="true" />
             </RelativeLayout>
 
             <RelativeLayout
-                android:id="@+id/tabItem3"
+                android:id="@+id/page3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -167,7 +171,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <LinearLayout
-            android:id="@+id/tabButtons"
+            android:id="@+id/pageButtons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -177,7 +181,7 @@
             tools:layout_constraintBottom_toBottomOf="parent">
 
             <Button
-                android:id="@+id/btTab1"
+                android:id="@+id/btPage1"
                 style="@android:style/Widget.Material.Button.Colored"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -185,12 +189,12 @@
                 android:background="@drawable/button_main"
                 android:minHeight="@dimen/btnHeight"
                 android:onClick="onTabButtonClick"
-                android:text="@string/tab1_button"
+                android:text="@string/page1_button"
                 android:textColor="@color/colorButtonText"
                 android:textSize="@dimen/btnTextSize" />
 
             <Button
-                android:id="@+id/btTab2"
+                android:id="@+id/btPage2"
                 style="@android:style/Widget.Material.Button.Colored"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -198,12 +202,12 @@
                 android:background="@drawable/button_main"
                 android:minHeight="@dimen/btnHeight"
                 android:onClick="onTabButtonClick"
-                android:text="@string/tab2_button"
+                android:text="@string/page2_button"
                 android:textColor="@color/colorButtonText"
                 android:textSize="@dimen/btnTextSize" />
 
             <Button
-                android:id="@+id/btTab3"
+                android:id="@+id/btPage3"
                 style="@android:style/Widget.Material.Button.Colored"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -211,7 +215,7 @@
                 android:background="@drawable/button_main"
                 android:minHeight="@dimen/btnHeight"
                 android:onClick="onTabButtonClick"
-                android:text="@string/tab3_button"
+                android:text="@string/page3_button"
                 android:textColor="@color/colorButtonText"
                 android:textSize="@dimen/btnTextSize" />
 
