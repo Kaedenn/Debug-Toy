@@ -1,5 +1,7 @@
 <resources>
-    <dimen name="btns_height">42dp</dimen>
-    <dimen name="debug_text_size">12sp</dimen>
-    <dimen name="button_text_size">14sp</dimen>
+    <dimen name="debugTextSize">12sp</dimen>
+    <dimen name="btnHeight">42dp</dimen>
+    <dimen name="btnTextSize">14sp</dimen>
+    <dimen name="btnRadius">20dp</dimen>
+    <dimen name="btnStroke">4dp</dimen>
 </resources>

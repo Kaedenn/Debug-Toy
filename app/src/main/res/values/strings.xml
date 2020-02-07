@@ -1,5 +1,5 @@
 <resources>
-    <!-- Text displayed on views inside the application's UI -->
+    <!-- Text displayed inside the application's UI -->
     <string name="app_name">Debug Toy</string>
     <string name="action_settings">Settings</string>
     <string name="debug_button_text">Run</string>
@@ -7,19 +7,27 @@
     <string name="clear_all_button_text">Clear All</string>
     <string name="debug_text_hint">Debugging Text</string>
     <string name="debug_command_hint">Debug Command</string>
-
     <string name="tab1_button">Tab 1</string>
     <string name="tab2_button">Tab 2</string>
     <string name="tab3_button">Tab 3</string>
 
-    <!-- Error messages and error formats -->
+    <!-- Error messages and strings -->
     <string name="err_no_cmd_f">Failed to execute command "%s": no such command</string>
     <string name="err_invalid_button_f">Unknown button with ID %d</string>
 
-    <!-- Commands and their help texts -->
-    <string name="cmd_help_commands">Commands:</string>
+    <!-- Commands, help strings, and messages used in commands -->
+
+    <!-- "help" command -->
     <string name="cmd_help">help</string>
+    <string name="cmd_help_commands">Commands:</string>
     <string name="cmd_help_help">Show this help message</string>
+    <!-- "env" command -->
+    <string name="cmd_env_prop_text_f">Properties: %d</string>
+    <string name="cmd_env_var_text">Environment variables:</string>
+    <string name="cmd_env_help">Display the environment</string>
+    <!-- "!" command -->
+    <string name="cmd_run_help">Execute a system command</string>
+    <string name="cmd_run_running_f">Executing system command: "%s"</string>
     <!-- Default help text for when command has no help string -->
     <string name="cmd_help_default">Custom command with no help string</string>
 </resources>

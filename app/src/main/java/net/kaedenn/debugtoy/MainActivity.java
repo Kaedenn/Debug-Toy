@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     /* Controller for the first tab's objects */
     private DebugTextController debug;
 
-    /* Indexes for the three tabs */
+    /* Indexes for the three tabs (TODO: REMOVE) */
     private static final int TAB1_INDEX = 0;
     private static final int TAB2_INDEX = 1;
     private static final int TAB3_INDEX = 2;
@@ -43,19 +43,25 @@ public class MainActivity extends AppCompatActivity {
         debug = new DebugTextController(this);
         selectTab(TAB1_INDEX);
 
+        /* TODO: Allow swiping between tabs and remove the tab buttons entirely */
+
+        /* Setup for tab 1 */
+
+        /* Register the "env" command */
         debug.register(new Command("env", arg -> {
             Properties p = System.getProperties();
-            debug.debug("Properties: " + p.size());
+            debug.debug(String.format(getResources().getString(R.string.cmd_env_prop_text_f), p.size()));
             for (Object propKey : p.keySet()) {
                 debug.debug(String.format("\"%s\" - \"%s\"", propKey, p.get(propKey)));
             }
-            debug.debug("Environment variables:");
+            debug.debug(getResources().getString(R.string.cmd_env_var_text));
             TreeMap<String, String> env = new TreeMap<>(System.getenv());
             env.forEach((k, v) -> debug.debug(String.format("$%s = \"%s\"", k, v)));
-        }, "get environment"));
+        }, getResources().getString(R.string.cmd_env_help)));
 
+        /* Register the "!" command */
         debug.register(new Command("!", arg -> {
-            debug.debug(String.format("Executing system command \"%s\"", arg));
+            debug.debug(String.format(getResources().getString(R.string.cmd_run_running_f), arg));
             try {
                 Process p = Runtime.getRuntime().exec(arg);
                 BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -70,16 +76,22 @@ public class MainActivity extends AppCompatActivity {
                     debug.debug("!! " + s);
                 }
             }
-            catch (IOException e) {
-                debug.debug("Unhandled IOException: " + e.toString());
+            catch (IOException | InterruptedException e) {
+                debug.debug(e.toString());
+            } catch (Exception e) {
+                debug.debug("Unhandled exception: " + e.toString());
+                throw e;
             }
-            catch (InterruptedException e) {
-                debug.debug("Unhandled InterruptedException: " + e.toString());
-            }
-            catch (Exception e) {
-               debug.debug("Unhandled exception!! " + e.toString());
-            }
-        }, "execute a system command"));
+        }, getResources().getString(R.string.cmd_run_help)));
+
+        /* TODO: Setup for tab 2
+         *
+         * Need function running periodically. Separate thread maybe? Can the
+         * surface be modified from a different thread?
+         */
+
+        /* TODO: Setup for tab 3 */
+
     }
 
     /** Change the active tab by its numerical index.
@@ -91,10 +103,29 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param idx The tab index (a TABn_INDEX numeric constant)
      */
-    private void selectTab(int idx) {
+    public void selectTab(int idx) {
+        int[] tabIDs = {R.id.tabItem1, R.id.tabItem2, R.id.tabItem3};
+        int currentTab = getCurrentTab();
+        if (idx != currentTab && idx >= TAB1_INDEX && idx <= TAB3_INDEX) {
+            /* TODO: Show slide transition */
+            /* TODO: Make the new slide visible */
+            findViewById(tabIDs[idx]).setVisibility(View.VISIBLE);
+        }
         findViewById(R.id.tabItem1).setVisibility(idx == TAB1_INDEX ? View.VISIBLE : View.INVISIBLE);
         findViewById(R.id.tabItem2).setVisibility(idx == TAB2_INDEX ? View.VISIBLE : View.INVISIBLE);
         findViewById(R.id.tabItem3).setVisibility(idx == TAB3_INDEX ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    /** Get the current tab index.
+     *
+     * @return The index for the current tab
+     */
+    public int getCurrentTab() {
+        /* TODO: Remove references to tab indexes */
+        if (findViewById(R.id.tabItem1).getVisibility() == View.VISIBLE) return TAB1_INDEX;
+        if (findViewById(R.id.tabItem2).getVisibility() == View.VISIBLE) return TAB2_INDEX;
+        if (findViewById(R.id.tabItem3).getVisibility() == View.VISIBLE) return TAB3_INDEX;
+        return -1;
     }
 
     /** Show a "Snack Bar" message.
@@ -173,3 +204,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
+

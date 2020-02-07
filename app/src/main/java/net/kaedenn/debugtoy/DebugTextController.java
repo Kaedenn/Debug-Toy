@@ -132,7 +132,7 @@ public final class DebugTextController {
      *
      */
     private void executeHelpCommand() {
-        for (String cmd : commands.keySet()) {
+        for (String cmd : getCommands()) {
             String help = Objects.requireNonNull(commands.get(cmd)).getHelpText();
             if (help == null || help.isEmpty()) {
                 /* Provide default help string for commands without help text */
