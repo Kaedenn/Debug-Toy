@@ -8,12 +8,12 @@ import android.graphics.Rect;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
-import androidx.annotation.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 import java.util.TimerTask;
 
-class DTAnimation extends TimerTask {
+class SurfaceAnimation extends TimerTask {
     private SurfaceHolder holder;
     private Rect surfaceRect;
     private int frameCount = 0;
@@ -55,14 +55,14 @@ class DTAnimation extends TimerTask {
 
     private Particle[] particles;
 
-    private void resetParticle(Particle p) {
+    private void resetParticle(@NotNull Particle p) {
         p.x = rand.nextInt(surfaceRect.right - surfaceRect.left) + surfaceRect.left;
         p.y = 0;
         p.dx = rand.nextInt(PARTICLE_DX_RANGE) - PARTICLE_DX_RANGE/2.f;
         p.dy = 0; //rand.nextInt(PARTICLE_DY_RANGE) * 1.f;
     }
 
-    DTAnimation(SurfaceHolder sh) {
+    SurfaceAnimation(@NotNull SurfaceHolder sh) {
         holder = sh;
         surfaceRect = sh.getSurfaceFrame();
         particles = new Particle[25];
@@ -109,7 +109,7 @@ class DTAnimation extends TimerTask {
         }
     }
 
-    private void draw(Canvas canvas, Rect r) {
+    private void draw(@NotNull Canvas canvas, Rect r) {
         if (isPaused) return;
         isDrawing = true;
         Paint paint = new Paint();

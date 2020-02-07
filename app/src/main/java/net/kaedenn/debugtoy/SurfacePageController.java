@@ -13,7 +13,7 @@ import java.util.Timer;
 class SurfacePageController {
     private MainActivity main;
     private Timer animTimer;
-    private DTAnimation anim = null;
+    private SurfaceAnimation anim = null;
 
     private static String LOG_TAG = "surf";
 
@@ -26,7 +26,7 @@ class SurfacePageController {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 Log.i(LOG_TAG, "surfaceCreated with holder " + holder.toString());
-                anim = new DTAnimation(holder);
+                anim = new SurfaceAnimation(holder);
                 animTimer.scheduleAtFixedRate(anim, 0, 20);
             }
 

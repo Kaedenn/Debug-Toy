@@ -24,11 +24,12 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     /* Controller for the first page's objects */
-    private DebugTextController debug;
+    private DebugPageController debug;
 
     /* Controller for the second page's objects */
     private SurfacePageController surfaceController;
 
+    /* The three pages and the current page (a reference to one of the three) */
     private View page1 = null;
     private View page2 = null;
     private View page3 = null;
@@ -37,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     /** Create the activity.
      *
      * This function also registers the primary commands that the
-     * {@link DebugTextController} will handle.
+     * {@link DebugPageController} will handle.
      *
      * @param savedInstanceState Saved application information
      */
@@ -46,21 +47,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /* Select page1 directly */
         page1 = findViewById(R.id.page1);
         page2 = findViewById(R.id.page2);
         page3 = findViewById(R.id.page3);
-        page1.setVisibility(View.VISIBLE);
-        page2.setVisibility(View.GONE);
-        page3.setVisibility(View.GONE);
-        currentPage = page1;
+
+        /* Select page1 directly */
+        forceSetPage(page1);
 
         /* TODO: Allow swiping between pages and remove the page buttons entirely */
 
         /* Setup for page 1 */
 
         /* Create the debug text controller */
-        debug = new DebugTextController(this);
+        debug = new DebugPageController(this);
 
         /* Register the "env" command */
         debug.register(new Command("env", arg -> {
@@ -104,6 +103,21 @@ public class MainActivity extends AppCompatActivity {
 
         /* TODO: Setup for page 3 */
 
+    }
+
+    /** Force the given page to be visible.
+     *
+     * The other pages will be set to GONE. No checking is done to ensure that
+     * {@param page} is actually one of the main pages.
+     *
+     * @param page The view to show
+     */
+    private void forceSetPage(@NotNull View page) {
+        page1.setVisibility(View.GONE);
+        page2.setVisibility(View.GONE);
+        page3.setVisibility(View.GONE);
+        page.setVisibility(View.VISIBLE);
+        currentPage = page;
     }
 
     /** Change the active page.
