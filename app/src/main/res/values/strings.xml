@@ -16,18 +16,6 @@
     <string name="err_invalid_button_f">Unknown button with ID %d</string>
 
     <!-- Commands, help strings, and messages used in commands -->
-
-    <!-- "help" command -->
-    <string name="cmd_help">help</string>
-    <string name="cmd_help_commands">Commands:</string>
     <string name="cmd_help_help">Show this help message</string>
-    <!-- "env" command -->
-    <string name="cmd_env_prop_text_f">Properties: %d</string>
-    <string name="cmd_env_var_text">Environment variables:</string>
-    <string name="cmd_env_help">Display the environment</string>
-    <!-- "!" command -->
-    <string name="cmd_run_help">Execute a system command</string>
-    <string name="cmd_run_running_f">Executing system command: "%s"</string>
-    <!-- Default help text for when command has no help string -->
     <string name="cmd_help_default">Custom command with no help string</string>
 </resources>

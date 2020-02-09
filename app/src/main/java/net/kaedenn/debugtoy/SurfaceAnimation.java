@@ -8,22 +8,20 @@ import android.graphics.Rect;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
+import net.kaedenn.debugtoy.util.RandomUtil;
+
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Random;
 import java.util.TimerTask;
 
 class SurfaceAnimation extends TimerTask {
     private SurfaceHolder holder;
     private Rect surfaceRect;
-    private int frameCount = 0;
     private boolean isDrawing = false;
     private boolean isPaused = false;
-    private Random rand = new Random();
 
-    private static int PARTICLE_SIZE = 5;
+    private static int PARTICLE_SIZE = 10;
     private static int PARTICLE_DX_RANGE = 20;
-    private static int PARTICLE_DY_RANGE = 10;
     private static float PARTICLE_DX_ACCEL = 0f;
     private static float PARTICLE_DY_ACCEL = 0.2f;
 
@@ -56,10 +54,10 @@ class SurfaceAnimation extends TimerTask {
     private Particle[] particles;
 
     private void resetParticle(@NotNull Particle p) {
-        p.x = rand.nextInt(surfaceRect.right - surfaceRect.left) + surfaceRect.left;
+        p.x = RandomUtil.getInstance().range(surfaceRect.left, surfaceRect.right);
         p.y = 0;
-        p.dx = rand.nextInt(PARTICLE_DX_RANGE) - PARTICLE_DX_RANGE/2.f;
-        p.dy = 0; //rand.nextInt(PARTICLE_DY_RANGE) * 1.f;
+        p.dx = RandomUtil.getInstance().range(-PARTICLE_DX_RANGE/2f, PARTICLE_DX_RANGE/2f);
+        p.dy = 0;
     }
 
     SurfaceAnimation(@NotNull SurfaceHolder sh) {
@@ -124,7 +122,6 @@ class SurfaceAnimation extends TimerTask {
 
     private synchronized void drawNextFrame() {
         if (!isDrawing) {
-            frameCount += 1;
             Rect r = holder.getSurfaceFrame();
             Surface s = holder.getSurface();
             Canvas c = s.lockCanvas(r);

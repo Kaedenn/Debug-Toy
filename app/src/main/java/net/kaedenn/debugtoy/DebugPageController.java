@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
 
+import android.view.View;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +68,7 @@ final class DebugPageController {
         String cmd = words[0];
         String args = (words.length == 1) ? "" : words[1];
         debug(String.format("Executing \"%s\" with \"%s\"", cmd, args));
-        if (cmd.equals(main.getResources().getString(R.string.cmd_help))) {
+        if (cmd.equals("help")) {
             /* Handle the special help command */
             executeHelpCommand();
         } else if (commands.containsKey(cmd)) {
@@ -75,6 +77,7 @@ final class DebugPageController {
             action.bindArgument(args);
             action.execute();
         }
+        scrollToBottom();
     }
 
     /** Return whether or not the command is registered.
@@ -83,7 +86,7 @@ final class DebugPageController {
      * @return true if the command is bound, false otherwise
      */
     boolean isRegistered(String cmd) {
-        if (cmd.equals(main.getResources().getString(R.string.cmd_help))) {
+        if (cmd.equals("help")) {
             return true;
         } else if (cmd.contains(" ")) {
             String c = cmd.split(" ", 2)[0];
@@ -110,6 +113,16 @@ final class DebugPageController {
         t.setText("");
     }
 
+    /** Scroll to the bottom of the containing scroll view.
+     *
+     */
+    void scrollToBottom() {
+        ScrollView sv = main.findViewById(R.id.debugTextScroll);
+        sv.fullScroll(View.FOCUS_DOWN);
+        TextView tv = main.findViewById(R.id.debugText);
+        tv.scrollBy(0, Integer.MAX_VALUE);
+    }
+
     /** Append a line to the debug text box.
      *
      * @param text The text to append
@@ -118,6 +131,7 @@ final class DebugPageController {
         TextView t = main.findViewById(R.id.debugText);
         t.append(text);
         t.append("\n");
+        scrollToBottom();
     }
 
     /** Clear the debug text box.
@@ -136,7 +150,7 @@ final class DebugPageController {
             String help = Objects.requireNonNull(commands.get(cmd)).getHelpText();
             if (help == null || help.isEmpty()) {
                 /* Provide default help string for commands without help text */
-                help = main.getResources().getString(R.string.cmd_help_default);
+                help = "Show this message";
             }
             debug(String.format("%8s - %s", cmd, help));
         }

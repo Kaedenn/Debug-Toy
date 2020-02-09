@@ -2,7 +2,9 @@ package net.kaedenn.debugtoy;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.system.Os;
 import android.view.View;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -12,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Properties;
@@ -35,6 +38,11 @@ public class MainActivity extends AppCompatActivity {
     private View page3 = null;
     private View currentPage = null;
 
+    /* Application's cache directory. Application-specific files should be
+     * stored here.
+     */
+    private File cacheDir;
+
     /** Create the activity.
      *
      * This function also registers the primary commands that the
@@ -42,10 +50,12 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param savedInstanceState Saved application information
      */
+    @SuppressLint("DefaultLocale")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        cacheDir = getApplicationContext().getCacheDir();
 
         page1 = findViewById(R.id.page1);
         page2 = findViewById(R.id.page2);
@@ -63,19 +73,30 @@ public class MainActivity extends AppCompatActivity {
 
         /* Register the "env" command */
         debug.register(new Command("env", arg -> {
+            /* System.getProperties */
             Properties p = System.getProperties();
-            debug.debug(String.format(getResources().getString(R.string.cmd_env_prop_text_f), p.size()));
+            debug.debug(String.format("Properties: %s", p.size()));
             for (Object propKey : p.keySet()) {
                 debug.debug(String.format("\"%s\" - \"%s\"", propKey, p.get(propKey)));
             }
-            debug.debug(getResources().getString(R.string.cmd_env_var_text));
+            /* System.getenv */
             TreeMap<String, String> env = new TreeMap<>(System.getenv());
             env.forEach((k, v) -> debug.debug(String.format("$%s = \"%s\"", k, v)));
-        }, getResources().getString(R.string.cmd_env_help)));
+            /* Cache directory */
+            debug.debug("cache: " + cacheDir.getAbsolutePath());
+        }, "Display information about the environment"));
+
+        /* Register the "id" command */
+        debug.register(new Command("id", arg -> {
+            debug.debug(String.format("pid: %d, ppid: %d", Os.getpid(), Os.getppid()));
+            debug.debug(String.format("uid: %d, euid: %d", Os.getuid(), Os.geteuid()));
+            debug.debug(String.format("gid: %d, egid: %d", Os.getgid(), Os.getegid()));
+            debug.debug(String.format("tid: %d", Os.gettid()));
+        }, "get user/group ID information"));
 
         /* Register the "!" command */
         debug.register(new Command("!", arg -> {
-            debug.debug(String.format(getResources().getString(R.string.cmd_run_running_f), arg));
+            debug.debug(String.format("Executing system command \"%s\"", arg));
             try {
                 Process p = Runtime.getRuntime().exec(arg);
                 BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -96,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 debug.debug("Unhandled exception: " + e.toString());
                 throw e;
             }
-        }, getResources().getString(R.string.cmd_run_help)));
+        }, "Execute a system command"));
 
         /* Setup for page 2 */
         surfaceController = new SurfacePageController(this);
