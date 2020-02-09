@@ -67,7 +67,6 @@ final class DebugPageController {
         String[] words = command.split(" ", 2);
         String cmd = words[0];
         String args = (words.length == 1) ? "" : words[1];
-        debug(String.format("Executing \"%s\" with \"%s\"", cmd, args));
         if (cmd.equals("help")) {
             /* Handle the special help command */
             executeHelpCommand();
@@ -116,11 +115,10 @@ final class DebugPageController {
     /** Scroll to the bottom of the containing scroll view.
      *
      */
-    void scrollToBottom() {
+    private void scrollToBottom() {
         ScrollView sv = main.findViewById(R.id.debugTextScroll);
-        sv.fullScroll(View.FOCUS_DOWN);
         TextView tv = main.findViewById(R.id.debugText);
-        tv.scrollBy(0, Integer.MAX_VALUE);
+        tv.post(() -> sv.fullScroll(View.FOCUS_DOWN));
     }
 
     /** Append a line to the debug text box.
