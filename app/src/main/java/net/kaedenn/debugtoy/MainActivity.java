@@ -3,13 +3,17 @@ package net.kaedenn.debugtoy;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.system.Os;
+import android.util.Log;
+import android.view.Display;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,31 +21,35 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-/** Main activity for the {@code net.kaedenn.debugtoy} application.
- *
- */
-public class MainActivity extends AppCompatActivity {
+/** Main activity for the {@code net.kaedenn.debugtoy} application. */
+public class MainActivity extends Activity {
+    private static final String LOG_TAG = "main";
 
-    /* Controller for the first page's objects */
-    private DebugPageController debug;
+    private static WeakReference<MainActivity> mActivity;
+    public static MainActivity getInstance() {
+        return mActivity.get();
+    }
 
-    /* Controller for the second page's objects */
-    private SurfacePageController surfaceController;
+    private TitleController titleController = null;
 
-    /* The three pages and the current page (a reference to one of the three) */
     private View page1 = null;
     private View page2 = null;
     private View page3 = null;
     private View currentPage = null;
 
-    /* Application's cache directory. Application-specific files should be
-     * stored here.
-     */
-    private File cacheDir;
+    private DebugPageController debug = null;
+
+    private SurfacePageController surfaceController = null;
+
+    /* Application-specific files should be stored here */
+    private File cacheDir = null;
+
+    private int mTouchSlop = 0;
 
     /** Create the activity.
      *
@@ -54,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mActivity = new WeakReference<>(this);
         setContentView(R.layout.activity_main);
         cacheDir = getApplicationContext().getCacheDir();
 
@@ -61,15 +70,23 @@ public class MainActivity extends AppCompatActivity {
         page2 = findViewById(R.id.page2);
         page3 = findViewById(R.id.page3);
 
+        titleController = new TitleController(findViewById(R.id.titlebar));
+
+        /* Title bar setup */
+        String titlebarText = "testing";
+        setTitleText(titlebarText);
+
         /* Select page1 directly */
-        forceSetPage(page1);
+        setPage(page1);
 
         /* TODO: Allow swiping between pages and remove the page buttons entirely */
+        /* https://developer.android.com/training/gestures/viewgroup#intercept */
+        /* https://developer.android.com/reference/android/view/ViewGroup */
 
         /* Setup for page 1 */
 
         /* Create the debug text controller */
-        debug = new DebugPageController(this);
+        debug = new DebugPageController();
 
         /* Register the "env" command */
         debug.register(new Command("env", arg -> {
@@ -93,6 +110,9 @@ public class MainActivity extends AppCompatActivity {
             debug.debug(String.format("gid: %d, egid: %d", Os.getgid(), Os.getegid()));
             debug.debug(String.format("tid: %d", Os.gettid()));
         }, "get user/group ID information"));
+
+        /* Register the "title" command */
+        debug.register(new Command("title", this::setTitleText, "set the title"));
 
         /* Register the "!" command */
         debug.register(new Command("!", arg -> {
@@ -120,10 +140,43 @@ public class MainActivity extends AppCompatActivity {
         }, "Execute a system command"));
 
         /* Setup for page 2 */
-        surfaceController = new SurfacePageController(this);
 
-        /* TODO: Setup for page 3 */
+        surfaceController = new SurfacePageController();
 
+        /* Setup for page 3 */
+
+    }
+
+    @SuppressLint("DefaultLocale")
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int action = event.getActionMasked();
+        debug.debug(String.format("onTouchEvent(%s, %d)", event.toString(), action));
+        switch (action) {
+            case (MotionEvent.ACTION_DOWN) :
+                Log.d(LOG_TAG,"Action was DOWN");
+                debug.debug("Motion DOWN");
+                return true;
+            case (MotionEvent.ACTION_MOVE) :
+                Log.d(LOG_TAG,"Action was MOVE");
+                debug.debug("Motion MOVE");
+                return true;
+            case (MotionEvent.ACTION_UP) :
+                Log.d(LOG_TAG,"Action was UP");
+                debug.debug("Motion UP");
+                return true;
+            case (MotionEvent.ACTION_CANCEL) :
+                Log.d(LOG_TAG,"Action was CANCEL");
+                debug.debug("Motion CANCEL");
+                return true;
+            case (MotionEvent.ACTION_OUTSIDE) :
+                Log.d(LOG_TAG,"Movement occurred outside bounds " +
+                        "of current screen element");
+                debug.debug("Motion outside");
+                return true;
+            default:
+                return super.onTouchEvent(event);
+        }
     }
 
     /** Force the given page to be visible.
@@ -133,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param page The view to show
      */
-    private void forceSetPage(@NotNull View page) {
+    private void setPage(@NotNull View page) {
         page1.setVisibility(View.GONE);
         page2.setVisibility(View.GONE);
         page3.setVisibility(View.GONE);
@@ -145,9 +198,10 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param targetPage The page to move to
      */
-    public void selectPage(View targetPage) {
+    private void selectPage(View targetPage) {
         View currentView = currentPage;
         if (currentView != null && targetPage != null && currentView != targetPage) {
+            /* Transition between currentPage and targetPage */
             targetPage.setAlpha(0);
             targetPage.setVisibility(View.VISIBLE);
             targetPage.animate()
@@ -179,6 +233,7 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param text The text to show
      */
+    @SuppressWarnings("unused")
     private void showSnack(@NotNull CharSequence text) {
         showSnack(findViewById(R.id.top), text);
     }
@@ -188,8 +243,29 @@ public class MainActivity extends AppCompatActivity {
      * @param view The view to pass to {@link Snackbar#make}
      * @param text The text to show
      */
+    @SuppressWarnings("unused")
     private void showSnack(@NotNull View view, @NotNull CharSequence text) {
         Snackbar.make(view, text, Snackbar.LENGTH_LONG).setAction("Action", null).show();
+    }
+
+    /** Show a toast message with a short duration.
+     *
+     * @param text The toast message to show
+     * @see Toast
+     */
+    @SuppressWarnings("unused")
+    private void shortToast(String text) {
+        Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+    }
+
+    /** Show a toast message with a long duration.
+     *
+     * @param text The toast message to show
+     * @see Toast
+     */
+    @SuppressWarnings("unused")
+    private void longToast(String text) {
+        Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
     }
 
     /** Handle clicking of one of the first page's buttons.
@@ -247,6 +323,25 @@ public class MainActivity extends AppCompatActivity {
                 showSnack(String.format(err_f, button.getId()));
                 break;
         }
+    }
+
+    /** Get the device's screen size.
+     *
+     * @return The screen size where x is width and y is height.
+     */
+    public Point getScreenSize() {
+        Display d = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        d.getSize(size);
+        return size;
+    }
+
+    /** Set the title text and start the title text animation.
+     *
+     * @param text The text to use
+     */
+    private void setTitleText(String text) {
+        titleController.setText(text);
     }
 }
 

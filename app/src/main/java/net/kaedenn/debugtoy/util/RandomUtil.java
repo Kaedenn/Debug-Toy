@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Random;
 
+@SuppressWarnings("WeakerAccess")
 public class RandomUtil extends Random {
     private static RandomUtil self;
 

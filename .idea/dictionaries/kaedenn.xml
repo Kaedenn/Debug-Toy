@@ -2,7 +2,14 @@
   <dictionary name="kaedenn">
     <words>
       <w>debugtoy</w>
+      <w>dxdt</w>
+      <w>dydt</w>
+      <w>egid</w>
+      <w>euid</w>
       <w>kaedenn</w>
+      <w>ppid</w>
+      <w>snackbar</w>
+      <w>unpause</w>
     </words>
   </dictionary>
 </component>

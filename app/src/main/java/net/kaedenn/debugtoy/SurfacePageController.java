@@ -11,23 +11,23 @@ import java.util.Timer;
  *
  */
 class SurfacePageController {
-    private MainActivity main;
-    private Timer animTimer;
-    private SurfaceAnimation anim = null;
+    private final MainActivity mActivity;
+    private final Timer mTimer;
+    private SurfaceAnimation mAnim = null;
 
-    private static String LOG_TAG = "surf";
+    private static final String LOG_TAG = "surf";
 
-    SurfacePageController(MainActivity mainActivity) {
-        main = mainActivity;
-        animTimer = new Timer("anim", true);
+    SurfacePageController() {
+        mActivity = MainActivity.getInstance();
+        mTimer = new Timer("mAnim", true);
 
         SurfaceHolder sh = getSurfaceView().getHolder();
         sh.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 Log.i(LOG_TAG, "surfaceCreated with holder " + holder.toString());
-                anim = new SurfaceAnimation(holder);
-                animTimer.scheduleAtFixedRate(anim, 0, 20);
+                mAnim = new SurfaceAnimation(holder);
+                mTimer.scheduleAtFixedRate(mAnim, 0, 20);
             }
 
             @Override
@@ -35,17 +35,17 @@ class SurfacePageController {
                 Log.i(LOG_TAG, String.format("surfaceChanged with holder %s format=%d w=%d h=%d",
                         holder.toString(), format, width, height));
                 /* TODO: Determine if redrawFrame is needed */
-                if (anim == null) {
-                    Log.e(LOG_TAG, "onSurfaceChanged with null anim!!");
+                if (mAnim == null) {
+                    Log.e(LOG_TAG, "onSurfaceChanged with null mAnim!!");
                 }
             }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
                 Log.i(LOG_TAG, "surfaceDestroyed with holder " + holder.toString());
-                animTimer.cancel();
-                animTimer.purge();
-                anim = null;
+                mTimer.cancel();
+                mTimer.purge();
+                mAnim = null;
             }
         });
     }
@@ -55,7 +55,7 @@ class SurfacePageController {
      * @return The SurfaceView this class manages
      */
     private SurfaceView getSurfaceView() {
-        return main.findViewById(R.id.page2Surface);
+        return mActivity.findViewById(R.id.page2Surface);
     }
 
     /** Called when the surface appears.
@@ -65,8 +65,8 @@ class SurfacePageController {
      */
     void doAppear() {
         Log.d(LOG_TAG, "page has appeared");
-        if (anim != null) {
-            anim.unpause();
+        if (mAnim != null) {
+            mAnim.unpause();
         }
     }
 
@@ -78,6 +78,6 @@ class SurfacePageController {
      */
     void doDisappear() {
         Log.d(LOG_TAG, "page has disappeared");
-        anim.pause();
+        mAnim.pause();
     }
 }

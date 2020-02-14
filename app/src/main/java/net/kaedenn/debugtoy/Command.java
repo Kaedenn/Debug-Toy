@@ -24,9 +24,9 @@ import java.util.function.Consumer;
  * @see java.util.function.Consumer
  */
 class Command {
-    private String cmd;
-    private Consumer<String> action;
-    private String helpText;
+    private final String cmd;
+    private final Consumer<String> action;
+    private final String helpText;
     private String arguments;
 
     /** Construct a command.

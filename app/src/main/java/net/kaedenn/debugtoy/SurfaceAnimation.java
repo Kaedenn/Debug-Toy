@@ -15,43 +15,45 @@ import org.jetbrains.annotations.NotNull;
 import java.util.TimerTask;
 
 class SurfaceAnimation extends TimerTask {
-    private SurfaceHolder holder;
-    private Rect surfaceRect;
+    private final SurfaceHolder holder;
+    private final Rect surfaceRect;
     private boolean isDrawing = false;
     private boolean isPaused = false;
 
-    private static int PARTICLE_SIZE = 10;
-    private static int PARTICLE_DX_RANGE = 20;
-    private static float PARTICLE_DX_ACCEL = 0f;
-    private static float PARTICLE_DY_ACCEL = 0.2f;
+    private static final int PARTICLE_SIZE = 10;
+    private static final int PARTICLE_DX_RANGE = 20;
+    private static final float PARTICLE_DXDT = 0f;
+    private static final float PARTICLE_DYDT = 0.2f;
 
+    @SuppressWarnings({"CanBeFinal", "SameParameterValue"})
     class Particle {
-        float x, y, w, h;
+        final float w, h;
+        float x, y;
         float dx, dy;
-        Particle(int x, int y, int w, int h) {
-            this.x = x;
-            this.y = y;
-            this.w = w;
-            this.h = h;
+        Particle(int px, int py, int pw, int ph) {
+            x = px;
+            y = py;
+            w = pw;
+            h = ph;
             dx = dy = 0;
         }
         void move() {
             x += dx;
             y += dy;
         }
-        void push(float dx, float dy) {
-            this.dx += dx;
-            this.dy += dy;
+        void push(float dxv, float dyv) {
+            dx += dxv;
+            dy += dyv;
         }
 
         @SuppressWarnings("unused")
         @SuppressLint("DefaultLocale")
         public String toDebugString() {
-            return String.format("Particle(%g, %g, %g, %g %g, %g", x, y, w, h, dx, dy);
+            return String.format("Particle({pos:[%g,%g], vel:[%g, %g], size:[%g, %g]})", x, y, dx, dy, w, h);
         }
     }
 
-    private Particle[] particles;
+    private final Particle[] particles;
 
     private void resetParticle(@NotNull Particle p) {
         p.x = RandomUtil.getInstance().range(surfaceRect.left, surfaceRect.right);
@@ -102,7 +104,7 @@ class SurfaceAnimation extends TimerTask {
                 p.dy = -p.dy;
             } else {
                 p.move();
-                p.push(PARTICLE_DX_ACCEL, PARTICLE_DY_ACCEL);
+                p.push(PARTICLE_DXDT, PARTICLE_DYDT);
             }
         }
     }
@@ -129,15 +131,4 @@ class SurfaceAnimation extends TimerTask {
             s.unlockCanvasAndPost(c);
         }
     }
-
-    /* TODO: Determine if this is really needed
-    public synchronized void redrawFrame(int format, int width, int height) {
-        Rect r = holder.getSurfaceFrame();
-        Surface s = holder.getSurface();
-        Canvas c = s.lockCanvas(r);
-        s.unlockCanvasAndPost(c);
-    }
-     */
-
-
 }
