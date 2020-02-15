@@ -14,4 +14,6 @@
     <string name="err_no_cmd_f">Failed to execute command "%s": no such command</string>
     <string name="err_invalid_button_f">Unknown button with ID %d</string>
 
+    <!-- Page 3 resources -->
+    <string name="pg3_button_text">Fill</string>
 </resources>

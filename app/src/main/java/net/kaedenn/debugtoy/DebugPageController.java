@@ -82,7 +82,6 @@ final class DebugPageController {
             action.bindArgument(args);
             action.execute();
         }
-        scrollToBottom();
     }
 
     /** Return whether or not the command is registered.

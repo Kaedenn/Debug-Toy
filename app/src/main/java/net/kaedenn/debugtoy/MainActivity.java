@@ -7,10 +7,13 @@ import android.app.Activity;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.system.Os;
+import android.text.Html;
+import android.text.Spanned;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -114,6 +117,11 @@ public class MainActivity extends Activity {
         /* Register the "title" command */
         debug.register(new Command("title", this::setTitleText, "set the title"));
 
+        /* Register the "title" command */
+        debug.register(new Command("qtitle",
+                (arg) -> titleController.queueText(arg, true),
+                "set the title"));
+
         /* Register the "!" command */
         debug.register(new Command("!", arg -> {
             debug.debug(String.format("Executing system command \"%s\"", arg));
@@ -138,6 +146,12 @@ public class MainActivity extends Activity {
                 throw e;
             }
         }, "Execute a system command"));
+
+        debug.register(new Command("html-title", arg -> {
+            TextView tv = findViewById(R.id.titlebar);
+            Spanned text = Html.fromHtml(arg.isEmpty() ? "<b>Some text</b> with formatting <i>and stuff</i>" : arg, 0);
+            tv.setText(text);
+        }, "inspect an item"));
 
         /* Setup for page 2 */
 
@@ -341,7 +355,7 @@ public class MainActivity extends Activity {
      * @param text The text to use
      */
     private void setTitleText(String text) {
-        titleController.setText(text);
+        titleController.setText(text, true);
     }
 }
 
