@@ -1,0 +1,21 @@
+Toy Android application for learning Android application development.
+
+This application "Debug Toy" contains my various efforts to learn how to create
+and maintain Android applications.
+
+The application is organized into "pages", with each page serving a different
+purpose.
+
+The first page is the "debug" page. This page has a text box for user input and
+a large text box for command output. Entering "help" will list the registered
+commands.
+
+The second page is a crude particle simulation. This page is meant to
+demonstrate using native C++ code with the Java application.
+
+The third page has nothing on it. This will change once I find something to
+implement.
+
+WARNING: This application may be a security risk if used on actual devices, as
+it allows arbitrary shell execution, even though the application's Android user
+(hopefully) lacks access to do anything destructive.
