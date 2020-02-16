@@ -10,6 +10,8 @@ cmake_minimum_required(VERSION 3.4.1)
 # and CMake builds them for you. When you build your app, Gradle
 # automatically packages shared libraries with your APK.
 
-add_library( particle-native
+include_directories(/src/main/cpp)
+
+add_library( particlenative
              SHARED
-             src/main/cpp/particle-native.cpp)
+             src/main/cpp/particle-native)
