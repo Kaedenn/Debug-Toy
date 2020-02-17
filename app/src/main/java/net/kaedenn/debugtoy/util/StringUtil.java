@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 
 @SuppressLint("DefaultLocale")
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class Strings {
+public final class StringUtil {
 
     /** Repeat a string.
      *
@@ -41,11 +41,11 @@ public final class Strings {
             return "\b";
         } else if (c == '"') {
             return "\"";
-        } else if (c < 8) {
+        } else if (c < 8) { /* octal */
             return String.format("\\%d", (int)c);
-        } else if (c < 0x20 || c >= 0x80) {
+        } else if (c < 0x20 || c >= 0x80) { /* control or non-ASCII */
             return String.format("\\u%04d", (int)c);
-        } else {
+        } else { /* something else (should be unused) */
             return String.valueOf(c);
         }
     }
