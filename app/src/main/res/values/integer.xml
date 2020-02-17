@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="pageAnimationDuration">500</integer>
+
+    <integer name="pSizeX">5</integer>
+    <integer name="pSizeY">5</integer>
+    <integer name="pDxRange">20</integer>
+    <integer name="pDyRange">0</integer>
+</resources>
