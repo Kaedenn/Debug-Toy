@@ -9,11 +9,11 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.system.Os;
 import android.text.Html;
-import android.text.Spanned;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import net.kaedenn.debugtoy.util.Logf;
 import net.kaedenn.debugtoy.util.Res;
 import net.kaedenn.debugtoy.util.StringUtil;
 
@@ -36,13 +37,14 @@ import java.util.concurrent.TimeUnit;
 /** Main activity for the {@code net.kaedenn.debugtoy} application. */
 public class MainActivity extends Activity {
 
+    /* Tag used for logging */
+    private static final String LOG_TAG = "main";
+
     /* Load the native particle (Page 2) library */
     static {
         Runtime.getRuntime().loadLibrary("particle-native");
+        Logf.getInstance().add(MainActivity.class, LOG_TAG);
     }
-
-    /* Tag used for logging */
-    private static final String LOG_TAG = "main";
 
     /* Provide public access to this MainActivity */
     private static WeakReference<MainActivity> mActivity;
@@ -89,7 +91,6 @@ public class MainActivity extends Activity {
         /* Title bar setup */
         titleController = new TitleController();
         titleController.setTextColor(((TextView)findViewById(R.id.titlebar)).getCurrentTextColor());
-
         for (String s : getResources().getStringArray(R.array.title_messages)) {
             titleController.addMessage(Html.fromHtml(s, 0));
         }
@@ -188,26 +189,25 @@ public class MainActivity extends Activity {
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
         int action = event.getActionMasked();
-        //debug.debugf("onTouchEvent(%s, %d)", event.toString(), action);
         switch (action) {
             case (MotionEvent.ACTION_DOWN) :
-                Log.d(LOG_TAG, "Action was DOWN");
+                Logf.dc("Action was DOWN");
                 debug.debug("Motion DOWN");
                 return true;
             case (MotionEvent.ACTION_MOVE) :
-                Log.d(LOG_TAG, "Action was MOVE");
+                Logf.dc("Action was MOVE");
                 debug.debug("Motion MOVE");
                 return true;
             case (MotionEvent.ACTION_UP) :
-                Log.d(LOG_TAG, "Action was UP");
+                Logf.dc("Action was UP");
                 debug.debug("Motion UP");
                 return true;
             case (MotionEvent.ACTION_CANCEL) :
-                Log.d(LOG_TAG, "Action was CANCEL");
+                Logf.dc("Action was CANCEL");
                 debug.debug("Motion CANCEL");
                 return true;
             case (MotionEvent.ACTION_OUTSIDE) :
-                Log.d(LOG_TAG, "Movement occurred outside of screen bounds");
+                Logf.dc("Movement occurred outside of screen bounds");
                 debug.debug("Motion outside");
                 return true;
             default:
@@ -352,9 +352,31 @@ public class MainActivity extends Activity {
                 break;
             /* Page 2 */
             /* Page 3 */
+            /* Default */
             default:
                 String err_f = Res.getString(R.string.err_invalid_button_f);
                 showSnack(String.format(err_f, button.getId()));
+                break;
+        }
+    }
+
+    public void onSwitchToggle(@NotNull View switchView) {
+        if (!(switchView instanceof Switch)) {
+            throw new RuntimeException(String.format("View %s not a Switch", switchView.toString()));
+        }
+        boolean isOn = ((Switch)switchView).isChecked();
+        switch (switchView.getId()) {
+            case R.id.switchDebug:
+                debug.debug("Debug toggle switch is " + (isOn ? "on" : "off"));
+                shortToast("Debug toggle switch is " + (isOn ? "on" : "off"));
+                break;
+            case R.id.switchAnimation:
+                debug.debug("Animation toggle switch is " + (isOn ? "on" : "off"));
+                shortToast("Animation toggle switch is " + (isOn ? "on" : "off"));
+                break;
+            default:
+                String err_f = Res.getString(R.string.err_invalid_button_f);
+                showSnack(String.format(err_f, switchView.getId()));
                 break;
         }
     }

@@ -24,14 +24,15 @@ import org.jetbrains.annotations.NotNull;
  * {@code cmd_help_default} is used.
  */
 final class DebugPageController {
-    private final MainActivity mActivity;
+    private static final String LOG_TAG = "debugPage";
+    static {
+        Logf.getInstance().add(DebugPageController.class, LOG_TAG);
+    }
+
     private final HashMap<String, Command> mCommands = new HashMap<>();
 
-    private static final String LOG_TAG = "debugPage";
-
     DebugPageController() {
-        mActivity = MainActivity.getInstance();
-        Log.i(LOG_TAG, "DebugPageController created");
+        Logf.ic("DebugPageController created");
     }
 
     /** Register a named command.
@@ -43,7 +44,7 @@ final class DebugPageController {
     void register(@NotNull Command action) {
         String cmd = action.getCommand();
         mCommands.put(cmd, action);
-        Logf.d(LOG_TAG, "Registered command %s (%s)", cmd, action);
+        Logf.dc("Registered command %s (%s)", cmd, action);
     }
 
     /** Removes a command entirely.
@@ -121,7 +122,7 @@ final class DebugPageController {
      * @return Current content of the debugActionText widget, as a string
      */
     String getDebugCommand() {
-        TextView t = mActivity.findViewById(R.id.debugCommand);
+        TextView t = MainActivity.getInstance().findViewById(R.id.debugCommand);
         return t.getText().toString();
     }
 
@@ -131,7 +132,7 @@ final class DebugPageController {
      * automatically when a command is submitted.
      */
     void clearDebugCommand() {
-        TextView t = mActivity.findViewById(R.id.debugCommand);
+        TextView t = MainActivity.getInstance().findViewById(R.id.debugCommand);
         t.setText("");
     }
 
@@ -141,8 +142,8 @@ final class DebugPageController {
      * queued {@code debug.debug} calls to complete.
      */
     private void scrollToBottom() {
-        ScrollView sv = mActivity.findViewById(R.id.debugTextScroll);
-        TextView tv = mActivity.findViewById(R.id.debugText);
+        ScrollView sv = MainActivity.getInstance().findViewById(R.id.debugTextScroll);
+        TextView tv = MainActivity.getInstance().findViewById(R.id.debugText);
         tv.post(() -> sv.fullScroll(View.FOCUS_DOWN));
     }
 
@@ -151,7 +152,7 @@ final class DebugPageController {
      * @param text The text to append
      */
     void debug(CharSequence text) {
-        TextView t = mActivity.findViewById(R.id.debugText);
+        TextView t = MainActivity.getInstance().findViewById(R.id.debugText);
         t.append(text);
         t.append("\n");
         scrollToBottom();
@@ -179,7 +180,7 @@ final class DebugPageController {
      * This clears the main debug text box of its content.
      */
     void clearDebug() {
-        TextView t = mActivity.findViewById(R.id.debugText);
+        TextView t = MainActivity.getInstance().findViewById(R.id.debugText);
         t.setText("");
     }
 

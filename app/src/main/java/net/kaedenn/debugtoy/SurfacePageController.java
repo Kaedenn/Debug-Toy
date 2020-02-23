@@ -5,7 +5,10 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+
 import net.kaedenn.debugtoy.util.Logf;
+import net.kaedenn.debugtoy.util.Res;
 
 import java.util.Timer;
 
@@ -13,45 +16,77 @@ import java.util.Timer;
  *
  */
 class SurfacePageController implements SurfaceHolder.Callback {
-    private final Timer mTimer;
-    private SurfaceAnimation mAnim = null;
-    private boolean mTimerActive = false;
-
     private static final String LOG_TAG = "surfacePage";
+    static {
+        Logf.getInstance().add(SurfacePageController.class, LOG_TAG);
+    }
 
+    private Timer mTimer;
+    private SurfaceAnimation mAnim;
+
+    /** Construct the controller.
+     *
+     * Creates the timer and binds the surface callbacks. Does not start the
+     * timer; that's done when the page appears.
+     */
     SurfacePageController() {
+        mAnim = new SurfaceAnimation(getSurfaceView().getHolder());
         mTimer = new Timer("mAnim", true);
         getSurfaceView().getHolder().addCallback(this);
     }
 
+    /** Start (or restart) the animation timer.
+     *
+     */
+    private void startTimer(@NonNull SurfaceHolder holder) {
+        if (mTimer != null) {
+            stopTimer();
+        }
+        mTimer = new Timer("mAnim", true);
+        mTimer.scheduleAtFixedRate(mAnim, 0, Res.getInteger(R.integer.animRate));
+    }
+
+    /** Stop the animation timer.
+     *
+     */
+    private void stopTimer() {
+        if (mTimer != null) {
+            mTimer.cancel(); /* stop animation from running */
+            mTimer.purge(); /* forcefully ensure animation does not run */
+            mTimer = null;
+        }
+    }
+
+    /** Callback: the contained surface was created.
+     *
+     * @param holder surface container for the surface that was created
+     */
     public void surfaceCreated(SurfaceHolder holder) {
-        Logf.i(LOG_TAG, "surfaceCreated with holder %s", holder.toString());
-        mAnim = new SurfaceAnimation(holder);
-        mTimer.scheduleAtFixedRate(mAnim, 0, 20);
-        mTimerActive = true;
+        Logf.ic("surfaceCreated holder=%s", holder.toString());
+        startTimer(holder);
     }
 
+    /** Callback: the contained surface has changed.
+     *
+     * @param holder surface container for the surface that changed
+     * @param format current (post-change) pixel format
+     * @param width current (post-change) surface width
+     * @param height current (post-change) surface height
+     */
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        Logf.i(LOG_TAG, "surfaceChanged with holder %s format=%d w=%d h=%d",
+        Logf.ic("surfaceChanged holder=%s format=%d w=%d h=%d",
                 holder.toString(), format, width, height);
+        mAnim.updateHolder(holder);
         /* TODO: Determine if redrawFrame is needed */
-        if (mAnim == null) {
-            Log.e(LOG_TAG, "onSurfaceChanged with null mAnim!!");
-        }
     }
 
+    /** Callback: the contained surface was destroyed.
+     *
+     * @param holder surface container for the surface that was destroyed
+     */
     public void surfaceDestroyed(SurfaceHolder holder) {
-        Logf.i(LOG_TAG, "surfaceDestroyed with holder %s", holder.toString());
-        if (mTimerActive) {
-            mTimer.cancel();
-            mTimer.purge();
-            mAnim = null;
-            mTimerActive = false;
-        }
-    }
-
-    public boolean isTimerActive() {
-        return mTimerActive;
+        Logf.ic("surfaceDestroyed holder=%s", holder.toString());
+        stopTimer();
     }
 
     /** Convenience function to get the managed SurfaceView.
@@ -64,26 +99,21 @@ class SurfacePageController implements SurfaceHolder.Callback {
 
     /** Called when the surface appears.
      *
-     * This method is called when the containing page goes from either
-     * {@value View#GONE} or {@value View#INVISIBLE}to {@value View#VISIBLE}.
+     * Called when the containing page goes from either {@value View#GONE} or
+     * {@value View#INVISIBLE} to {@value View#VISIBLE}.
      */
     void doAppear() {
-        Log.d(LOG_TAG, "page has appeared");
-        if (mAnim != null) {
-            mAnim.unpause();
-        }
+        Logf.dc("page has appeared");
+        mAnim.unpause();
     }
 
     /** Called when the surface disappears.
      *
-     * This method is called when the containing page goes from
-     * {@value View#GONE} to either  {@value View#INVISIBLE} or
-     * {@value View#VISIBLE}.
+     * Called when the containing page goes from {@value View#GONE} to either
+     * {@value View#INVISIBLE} or {@value View#VISIBLE}.
      */
     void doDisappear() {
-        Log.d(LOG_TAG, "page has disappeared");
-        if (mAnim != null) {
-            mAnim.pause();
-        }
+        Logf.dc("page has disappeared");
+        mAnim.pause();
     }
 }

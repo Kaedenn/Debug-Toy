@@ -28,6 +28,10 @@ import java.util.List;
 
 class TitleController {
     private static final String LOG_TAG = "title";
+    static {
+        Logf.getInstance().add(TitleController.class, LOG_TAG);
+    }
+
     private static final float TEXT_MARGIN = 0.1f;
 
     @NonNull
@@ -49,7 +53,7 @@ class TitleController {
         mHelperView = MainActivity.getInstance().findViewById(R.id.titlebarHelper);
         mTitleView.setOnTouchListener(this::onTitlebarTouchEvent);
         mInterpolator = AnimationUtils.loadInterpolator(MainActivity.getInstance(), android.R.anim.linear_interpolator);
-        Log.d(LOG_TAG, "TitleController constructed");
+        Logf.dc("TitleController constructed");
     }
 
     /** Set the default text color.
@@ -126,7 +130,7 @@ class TitleController {
      */
     private void maybeStartAnimation() {
         if (mAnimation == null) {
-            Log.d(LOG_TAG, "Animation is not running; starting");
+            Logf.dc("Animation is not running; starting");
             startAnimation();
         }
     }
@@ -148,18 +152,18 @@ class TitleController {
     private Animation.AnimationListener mSetListener = new Animation.AnimationListener() {
         @Override
         public void onAnimationStart(Animation animation) {
-            Log.v(LOG_TAG, "Animation set is starting");
+            Logf.vc("Animation set is starting");
         }
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            Log.v(LOG_TAG, "Animation set has ended");
+            Logf.vc("Animation set has ended");
             startAnimation();
         }
 
         @Override
         public void onAnimationRepeat(Animation animation) {
-            Log.v(LOG_TAG, "Animation set is repeating");
+            Logf.vc("Animation set is repeating");
         }
     };
 
@@ -171,18 +175,18 @@ class TitleController {
     private Animation.AnimationListener mTranslateListener = new Animation.AnimationListener() {
         @Override
         public void onAnimationStart(Animation animation) {
-            Log.v(LOG_TAG, "Translation animation is starting");
+            Logf.vc("Translation animation is starting");
         }
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            Log.v(LOG_TAG, "Translation animation has ended");
+            Logf.vc("Translation animation has ended");
             startAnimation();
         }
 
         @Override
         public void onAnimationRepeat(Animation animation) {
-            Log.v(LOG_TAG, "Translation animation is repeating");
+            Logf.vc("Translation animation is repeating");
         }
     };
 
