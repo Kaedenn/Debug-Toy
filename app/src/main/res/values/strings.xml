@@ -14,6 +14,11 @@
     <string name="err_no_cmd_f">Failed to execute command "%s": no such command</string>
     <string name="err_invalid_button_f">Unknown button with ID %d</string>
 
-    <!-- Page 3 resources -->
-    <string name="pg3_button_text">Fill</string>
+    <!-- Title messages -->
+    <string-array name="title_messages">
+        <item>Welcome!</item>
+        <item>This is a toy application to investigate Android application development</item>
+        <item><![CDATA[The application is <i>not</i> suitable for use on actual devices]]></item>
+        <item><![CDATA[This title bar supports <b>bold</b> and <i>italicized</i> and <u>underlined</u> and <font color="red">red</font> text]]></item>
+    </string-array>
 </resources>

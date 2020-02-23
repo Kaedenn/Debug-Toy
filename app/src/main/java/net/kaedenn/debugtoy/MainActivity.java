@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.system.Os;
@@ -16,48 +17,61 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
 import com.google.android.material.snackbar.Snackbar;
+
+import net.kaedenn.debugtoy.util.Res;
+import net.kaedenn.debugtoy.util.StringUtil;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.util.Properties;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 /** Main activity for the {@code net.kaedenn.debugtoy} application. */
 public class MainActivity extends Activity {
+
+    /* Load the native particle (Page 2) library */
+    static {
+        Runtime.getRuntime().loadLibrary("particle-native");
+    }
+
+    /* Tag used for logging */
     private static final String LOG_TAG = "main";
 
+    /* Provide public access to this MainActivity */
     private static WeakReference<MainActivity> mActivity;
     public static MainActivity getInstance() {
         return mActivity.get();
     }
 
+    /* Controller for the title bar's text and scrolling effect */
     private TitleController titleController = null;
 
+    /* References to each page (and the current page) */
     private View page1 = null;
     private View page2 = null;
     private View page3 = null;
     private View currentPage = null;
 
-    private DebugPageController debug = null;
+    /* Controller for the first page. Public for other pages to use.  */
+    public DebugPageController debug = null;
 
+    /* Controller for the second page */
     private SurfacePageController surfaceController = null;
 
     /* Application-specific files should be stored here */
-    private File cacheDir = null;
-
-    private int mTouchSlop = 0;
-
     /** Create the activity.
      *
-     * This function also registers the primary commands that the
-     * {@link DebugPageController} will handle.
+     * This function performs initial setup for the three pages:
+     * Page 1: Register the commands for the {@link DebugPageController}.
+     * Page 2: Construct the surface controller.
+     * Page 3: Nothing yet.
      *
      * @param savedInstanceState Saved application information
      */
@@ -67,17 +81,18 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         mActivity = new WeakReference<>(this);
         setContentView(R.layout.activity_main);
-        cacheDir = getApplicationContext().getCacheDir();
 
         page1 = findViewById(R.id.page1);
         page2 = findViewById(R.id.page2);
         page3 = findViewById(R.id.page3);
 
-        titleController = new TitleController(findViewById(R.id.titlebar));
-
         /* Title bar setup */
-        String titlebarText = "testing";
-        setTitleText(titlebarText);
+        titleController = new TitleController();
+        titleController.setTextColor(((TextView)findViewById(R.id.titlebar)).getCurrentTextColor());
+
+        for (String s : getResources().getStringArray(R.array.title_messages)) {
+            titleController.addMessage(Html.fromHtml(s, 0));
+        }
 
         /* Select page1 directly */
         setPage(page1);
@@ -86,45 +101,38 @@ public class MainActivity extends Activity {
         /* https://developer.android.com/training/gestures/viewgroup#intercept */
         /* https://developer.android.com/reference/android/view/ViewGroup */
 
-        /* Setup for page 1 */
+        /* Begin setup for page 1 */
 
         /* Create the debug text controller */
         debug = new DebugPageController();
 
         /* Register the "env" command */
         debug.register(new Command("env", arg -> {
+            Context context = getApplicationContext();
+
             /* System.getProperties */
             Properties p = System.getProperties();
-            debug.debug(String.format("Properties: %s", p.size()));
+            debug.debugf("Properties: %s", p.size());
             for (Object propKey : p.keySet()) {
-                debug.debug(String.format("\"%s\" - \"%s\"", propKey, p.get(propKey)));
+                debug.debugf("\"%s\" - \"%s\"", propKey, p.get(propKey));
             }
             /* System.getenv */
-            TreeMap<String, String> env = new TreeMap<>(System.getenv());
-            env.forEach((k, v) -> debug.debug(String.format("$%s = \"%s\"", k, v)));
-            /* Cache directory */
-            debug.debug("cache: " + cacheDir.getAbsolutePath());
+            System.getenv().forEach((k,v) -> debug.debugf("$%s = %s", k, StringUtil.escape(v)));
+            /* Directories */
+            debug.debugf("%s %s", "cache", context.getCacheDir().getAbsolutePath());
+            debug.debugf("%s %s", "code cache", context.getCodeCacheDir().getAbsolutePath());
+            debug.debugf("%s %s", "data", context.getDataDir().getAbsolutePath());
+            debug.debugf("%s %s", "files", context.getFilesDir().getAbsolutePath());
+            debug.debugf("%s %s", "obb", context.getObbDir().getAbsolutePath());
+            if (context.getExternalCacheDir() != null) {
+                debug.debugf("%s %s", "external cache", context.getExternalCacheDir().getAbsolutePath());
+            }
+
         }, "Display information about the environment"));
-
-        /* Register the "id" command */
-        debug.register(new Command("id", arg -> {
-            debug.debug(String.format("pid: %d, ppid: %d", Os.getpid(), Os.getppid()));
-            debug.debug(String.format("uid: %d, euid: %d", Os.getuid(), Os.geteuid()));
-            debug.debug(String.format("gid: %d, egid: %d", Os.getgid(), Os.getegid()));
-            debug.debug(String.format("tid: %d", Os.gettid()));
-        }, "get user/group ID information"));
-
-        /* Register the "title" command */
-        debug.register(new Command("title", this::setTitleText, "set the title"));
-
-        /* Register the "title" command */
-        debug.register(new Command("qtitle",
-                (arg) -> titleController.queueText(arg, true),
-                "set the title"));
 
         /* Register the "!" command */
         debug.register(new Command("!", arg -> {
-            debug.debug(String.format("Executing system command \"%s\"", arg));
+            debug.debugf("Executing system command \"%s\"", arg);
             try {
                 Process p = Runtime.getRuntime().exec(arg);
                 BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -147,50 +155,73 @@ public class MainActivity extends Activity {
             }
         }, "Execute a system command"));
 
-        debug.register(new Command("html-title", arg -> {
-            TextView tv = findViewById(R.id.titlebar);
-            Spanned text = Html.fromHtml(arg.isEmpty() ? "<b>Some text</b> with formatting <i>and stuff</i>" : arg, 0);
-            tv.setText(text);
-        }, "inspect an item"));
+        /* Register the "id" command */
+        debug.register(new Command("id", arg -> {
+            debug.debugf("pid: %d, ppid: %d", Os.getpid(), Os.getppid());
+            debug.debugf("uid: %d, euid: %d", Os.getuid(), Os.geteuid());
+            debug.debugf("gid: %d, egid: %d", Os.getgid(), Os.getegid());
+            debug.debugf("tid: %d", Os.gettid());
+        }, "get user/group ID information"));
 
-        /* Setup for page 2 */
+        /* Register the "title" command */
+        debug.register(new Command("title", titleController::addMessage, "add a title message"));
+
+        /* Register the "html-title" command */
+        debug.register(new Command("html-title", arg -> titleController.addMessage(Html.fromHtml(arg, 0)), "add HTML title message"));
+
+        /* Begin setup for page 2 */
 
         surfaceController = new SurfacePageController();
 
-        /* Setup for page 3 */
+        /* Begin setup for page 3 */
 
     }
 
+    /** Process a touch event.
+     *
+     * @param event The motion event to process.
+     * @return True when the event is consumed, false otherwise.
+     *
+     * @see Activity#onTouchEvent(MotionEvent)
+     */
     @SuppressLint("DefaultLocale")
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
+    public boolean onTouchEvent(@NonNull MotionEvent event) {
         int action = event.getActionMasked();
-        debug.debug(String.format("onTouchEvent(%s, %d)", event.toString(), action));
+        //debug.debugf("onTouchEvent(%s, %d)", event.toString(), action);
         switch (action) {
             case (MotionEvent.ACTION_DOWN) :
-                Log.d(LOG_TAG,"Action was DOWN");
+                Log.d(LOG_TAG, "Action was DOWN");
                 debug.debug("Motion DOWN");
                 return true;
             case (MotionEvent.ACTION_MOVE) :
-                Log.d(LOG_TAG,"Action was MOVE");
+                Log.d(LOG_TAG, "Action was MOVE");
                 debug.debug("Motion MOVE");
                 return true;
             case (MotionEvent.ACTION_UP) :
-                Log.d(LOG_TAG,"Action was UP");
+                Log.d(LOG_TAG, "Action was UP");
                 debug.debug("Motion UP");
                 return true;
             case (MotionEvent.ACTION_CANCEL) :
-                Log.d(LOG_TAG,"Action was CANCEL");
+                Log.d(LOG_TAG, "Action was CANCEL");
                 debug.debug("Motion CANCEL");
                 return true;
             case (MotionEvent.ACTION_OUTSIDE) :
-                Log.d(LOG_TAG,"Movement occurred outside bounds " +
-                        "of current screen element");
+                Log.d(LOG_TAG, "Movement occurred outside of screen bounds");
                 debug.debug("Motion outside");
                 return true;
             default:
                 return super.onTouchEvent(event);
         }
+    }
+
+    /** Process a touch event.
+     *
+     * @param event The motion event to process.
+     */
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        return super.dispatchTouchEvent(event);
     }
 
     /** Force the given page to be visible.
@@ -220,11 +251,11 @@ public class MainActivity extends Activity {
             targetPage.setVisibility(View.VISIBLE);
             targetPage.animate()
                     .alpha(1f)
-                    .setDuration(500)
+                    .setDuration(Res.getInteger(R.integer.pageAnimationDuration))
                     .setListener(null);
             currentView.animate()
                     .alpha(0f)
-                    .setDuration(500)
+                    .setDuration(Res.getInteger(R.integer.pageAnimationDuration))
                     .setListener(new AnimatorListenerAdapter() {
                         @Override
                         public void onAnimationEnd(Animator animation) {
@@ -282,21 +313,33 @@ public class MainActivity extends Activity {
         Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
     }
 
-    /** Handle clicking of one of the first page's buttons.
+    /** Handle button clicks.
      *
-     * This function is called when either the "Debug" or "Clear" buttons are
-     * clicked by the user.
+     * This function is called when any of the app's buttons are pressed. The
+     * case statements are organized by page, with the top-level button cases
+     * first.
      *
-     * @param button Reference to the button that was clicked
+     * @param button Reference to the button clicked.
      */
     public void onButtonClick(@NotNull View button) {
         String cmd = debug.getDebugCommand();
         switch (button.getId()) {
+            /* Page selection */
+            case R.id.btPage1:
+                selectPage(page1);
+                break;
+            case R.id.btPage2:
+                selectPage(page2);
+                break;
+            case R.id.btPage3:
+                selectPage(page3);
+                break;
+            /* Page 1 */
             case R.id.btDebug:
                 if (debug.isRegistered(cmd)) {
                     debug.execute(cmd);
                 } else {
-                    String err_f = getResources().getString(R.string.err_no_cmd_f);
+                    String err_f = Res.getString(R.string.err_no_cmd_f);
                     showSnack(String.format(err_f, cmd));
                 }
                 break;
@@ -307,33 +350,10 @@ public class MainActivity extends Activity {
                 debug.clearDebug();
                 debug.clearDebugCommand();
                 break;
+            /* Page 2 */
+            /* Page 3 */
             default:
-                String err_f = getResources().getString(R.string.err_invalid_button_f);
-                showSnack(String.format(err_f, button.getId()));
-                break;
-        }
-    }
-
-    /** Handle clicking of the "Change Tab" buttons.
-     *
-     * This function is called when one of the "Tab" buttons are clicked by the
-     * user.
-     *
-     * @param button Reference to the button that was clicked
-     */
-    public void onTabButtonClick(@NotNull View button) {
-        switch (button.getId()) {
-            case R.id.btPage1:
-                selectPage(page1);
-                break;
-            case R.id.btPage2:
-                selectPage(page2);
-                break;
-            case R.id.btPage3:
-                selectPage(page3);
-                break;
-            default:
-                String err_f = getResources().getString(R.string.err_invalid_button_f);
+                String err_f = Res.getString(R.string.err_invalid_button_f);
                 showSnack(String.format(err_f, button.getId()));
                 break;
         }
@@ -348,14 +368,6 @@ public class MainActivity extends Activity {
         Point size = new Point();
         d.getSize(size);
         return size;
-    }
-
-    /** Set the title text and start the title text animation.
-     *
-     * @param text The text to use
-     */
-    private void setTitleText(String text) {
-        titleController.setText(text, true);
     }
 }
 

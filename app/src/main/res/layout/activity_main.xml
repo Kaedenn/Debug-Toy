@@ -26,9 +26,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clickable="false"
+            android:ellipsize="none"
             android:focusable="false"
             android:singleLine="true"
-            android:textSize="@dimen/btnTextSize" />
+            android:textSize="@dimen/btnTextSize"
+            android:visibility="visible"
+            tools:text="Scrolling title text" />
+
+        <TextView
+            android:id="@+id/titlebarHelper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="false"
+            android:ellipsize="none"
+            android:focusable="false"
+            android:singleLine="true"
+            android:textSize="@dimen/btnTextSize"
+            android:visibility="gone"
+            tools:text="Scrolling title text" />
 
         <LinearLayout
             android:id="@+id/pagesLayout"
@@ -171,52 +186,9 @@
             <RelativeLayout
                 android:id="@+id/page3"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" >
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <TextView
-                        android:id="@+id/page3Text"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:gravity="start"
-                        android:hint="@string/debug_text_hint"
-                        android:importantForAutofill="no"
-                        android:inputType="none"
-                        app:layout_constraintBottom_toTopOf="@id/page3ButtonTable"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <LinearLayout
-                        android:id="@+id/page3ButtonTable"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/page3Text">
-
-                        <Button
-                            android:id="@+id/button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/pg3_button_text"
-                            android:textSize="@dimen/btnTextSize" />
-
-                        <Button
-                            android:id="@+id/button2"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/pg3_button_text"
-                            android:textSize="@dimen/btnTextSize" />
-                    </LinearLayout>
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-            </RelativeLayout>
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                tools:visibility="gone" />
 
         </LinearLayout>
 
@@ -234,7 +206,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_main"
                 android:minHeight="@dimen/btnHeight"
-                android:onClick="onTabButtonClick"
+                android:onClick="onButtonClick"
                 android:text="@string/page1_button"
                 android:textColor="@color/colorButtonText"
                 android:textSize="@dimen/btnTextSize" />
@@ -247,7 +219,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_main"
                 android:minHeight="@dimen/btnHeight"
-                android:onClick="onTabButtonClick"
+                android:onClick="onButtonClick"
                 android:text="@string/page2_button"
                 android:textColor="@color/colorButtonText"
                 android:textSize="@dimen/btnTextSize" />
@@ -260,7 +232,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_main"
                 android:minHeight="@dimen/btnHeight"
-                android:onClick="onTabButtonClick"
+                android:onClick="onButtonClick"
                 android:text="@string/page3_button"
                 android:textColor="@color/colorButtonText"
                 android:textSize="@dimen/btnTextSize" />

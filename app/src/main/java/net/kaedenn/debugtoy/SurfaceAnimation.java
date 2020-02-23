@@ -4,23 +4,27 @@ import android.annotation.SuppressLint;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
-import net.kaedenn.debugtoy.util.RandomUtil;
+import net.kaedenn.debugtoy.util.RandUtil;
+import net.kaedenn.debugtoy.util.Res;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.TimerTask;
 
 class SurfaceAnimation extends TimerTask {
+
+    private static final String LOG_TAG = "surfaceAnim";
+
     private final SurfaceHolder holder;
     private final Rect surfaceRect;
     private boolean isDrawing = false;
     private boolean isPaused = false;
 
-    private static final int PARTICLE_SIZE = 10;
     private static final int PARTICLE_DX_RANGE = 20;
     private static final float PARTICLE_DXDT = 0f;
     private static final float PARTICLE_DYDT = 0.2f;
@@ -55,10 +59,16 @@ class SurfaceAnimation extends TimerTask {
 
     private final Particle[] particles;
 
+    private Point getDefaultParticleSize() {
+        return new Point(
+                Res.getInteger(R.integer.pSizeX),
+                Res.getInteger(R.integer.pSizeY));
+    }
+
     private void resetParticle(@NotNull Particle p) {
-        p.x = RandomUtil.getInstance().range(surfaceRect.left, surfaceRect.right);
+        p.x = RandUtil.getRange(surfaceRect.left, surfaceRect.right);
         p.y = 0;
-        p.dx = RandomUtil.getInstance().range(-PARTICLE_DX_RANGE/2f, PARTICLE_DX_RANGE/2f);
+        p.dx = RandUtil.getRange(-PARTICLE_DX_RANGE/2f, PARTICLE_DX_RANGE/2f);
         p.dy = 0;
     }
 
@@ -67,7 +77,8 @@ class SurfaceAnimation extends TimerTask {
         surfaceRect = sh.getSurfaceFrame();
         particles = new Particle[25];
         for (int i = 0; i < particles.length; ++i) {
-            particles[i] = new Particle(0, 0, PARTICLE_SIZE, PARTICLE_SIZE);
+            Point pSize = getDefaultParticleSize();
+            particles[i] = new Particle(0, 0, pSize.x, pSize.y);
             resetParticle(particles[i]);
         }
     }
@@ -95,6 +106,9 @@ class SurfaceAnimation extends TimerTask {
     }
 
     private void animate() {
+        /* Replace with JNI
+         animate([LParticle;LPoint;)V
+         */
         for (Particle p : particles) {
             if (p.x + p.w < 0) resetParticle(p);
             else if (p.x - p.w > getWidth()) resetParticle(p);
@@ -115,7 +129,7 @@ class SurfaceAnimation extends TimerTask {
         Paint paint = new Paint();
         paint.setColor(Color.WHITE);
         canvas.clipRect(r);
-        canvas.drawColor(Color.BLACK);
+        canvas.drawColor(Res.getColor(R.color.colorPrimary));
         for (Particle p : particles) {
             canvas.drawRect(p.x, p.y, p.x+p.w, p.y+p.h, paint);
         }
@@ -131,4 +145,7 @@ class SurfaceAnimation extends TimerTask {
             s.unlockCanvasAndPost(c);
         }
     }
+
+    private native void animateNative(Particle[] particles, float[] wh, float[] ddxy);
+    private native void funcNative();
 }

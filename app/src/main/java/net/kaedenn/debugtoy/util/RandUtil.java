@@ -1,5 +1,6 @@
 package net.kaedenn.debugtoy.util;
 
+import android.graphics.Color;
 import android.graphics.Point;
 
 import java.time.Instant;
@@ -7,19 +8,19 @@ import java.util.Date;
 import java.util.Random;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class RandomUtil extends Random {
-    private static RandomUtil self;
+public class RandUtil extends Random {
+    private static RandUtil self;
 
-    public static RandomUtil getInstance() {
-        if (self == null) self = new RandomUtil();
+    public static RandUtil getInstance() {
+        if (self == null) self = new RandUtil();
         return self;
     }
 
-    public RandomUtil() {
+    public RandUtil() {
         this(Date.from(Instant.now()).getTime());
     }
 
-    public RandomUtil(long seed) {
+    public RandUtil(long seed) {
         super(seed);
     }
 
@@ -65,4 +66,8 @@ public class RandomUtil extends Random {
         return getInstance().range(min, max);
     }
 
+    public static int getColor(float s, float v) {
+        float h = getRange(0f, 360f);
+        return Color.HSVToColor(new float[]{h, s, v});
+    }
 }

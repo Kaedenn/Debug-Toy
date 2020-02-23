@@ -9,6 +9,10 @@ import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
+import net.kaedenn.debugtoy.util.Logf;
+
 import org.jetbrains.annotations.NotNull;
 
 /** Controller for the primary debug text box and the command box below it.
@@ -23,7 +27,7 @@ final class DebugPageController {
     private final MainActivity mActivity;
     private final HashMap<String, Command> mCommands = new HashMap<>();
 
-    private static final String LOG_TAG = "debug";
+    private static final String LOG_TAG = "debugPage";
 
     DebugPageController() {
         mActivity = MainActivity.getInstance();
@@ -39,7 +43,7 @@ final class DebugPageController {
     void register(@NotNull Command action) {
         String cmd = action.getCommand();
         mCommands.put(cmd, action);
-        Log.d(LOG_TAG, String.format("Registered command %s (%s)", cmd, action));
+        Logf.d(LOG_TAG, "Registered command %s (%s)", cmd, action);
     }
 
     /** Removes a command entirely.
@@ -56,11 +60,18 @@ final class DebugPageController {
      * @return A collection of mCommands, without the default command.
      */
     @SuppressWarnings("WeakerAccess")
+    @NonNull
     Collection<String> getCommands() {
         return mCommands.keySet();
     }
 
     /** Execute the command string.
+     *
+     * By default, the empty string is passed as the command's arguments string.
+     *
+     * If the command contains a space, then the command is set to the first
+     * word (up to but not including the space) and the arguments are set to
+     * everything after the first space.
      *
      * @param command The command string to execute
      */
@@ -85,6 +96,11 @@ final class DebugPageController {
     }
 
     /** Return whether or not the command is registered.
+     *
+     * If a command contains a space, then only the first word (up to but not
+     * including the space) is used. Otherwise, the entire command is used.
+     *
+     * The {@code "help"} command is always registered.
      *
      * @param cmd The named command to examine
      * @return true if the command is bound, false otherwise
@@ -111,6 +127,8 @@ final class DebugPageController {
 
     /** Clear the debugActionText widget's text.
      *
+     * This function clears the small input box's content. This is called
+     * automatically when a command is submitted.
      */
     void clearDebugCommand() {
         TextView t = mActivity.findViewById(R.id.debugCommand);
@@ -119,6 +137,8 @@ final class DebugPageController {
 
     /** Scroll to the bottom of the containing scroll view.
      *
+     * Scrolling takes place after the current main loop iteration to allow for
+     * queued {@code debug.debug} calls to complete.
      */
     private void scrollToBottom() {
         ScrollView sv = mActivity.findViewById(R.id.debugTextScroll);
@@ -137,8 +157,26 @@ final class DebugPageController {
         scrollToBottom();
     }
 
+    /** Append a line to the debug text box.
+     *
+     * @param words The words to append
+     */
+    void debug(CharSequence[] words) {
+        debug(String.join(" ", words));
+    }
+
+    /** Append a formatted message to the debug text box.
+     *
+     * @param format The format string
+     * @param arguments The arguments to pass with the format string
+     */
+    void debugf(CharSequence format, Object... arguments) {
+        debug(String.format(format.toString(), arguments));
+    }
+
     /** Clear the debug text box.
      *
+     * This clears the main debug text box of its content.
      */
     void clearDebug() {
         TextView t = mActivity.findViewById(R.id.debugText);
@@ -147,13 +185,14 @@ final class DebugPageController {
 
     /** Executes the special command "help".
      *
+     * This command lists the registered commands and their help strings.
      */
     private void executeHelpCommand() {
         for (String cmd : getCommands()) {
             String help = Objects.requireNonNull(mCommands.get(cmd)).getHelpText();
             if (help == null || help.isEmpty()) {
                 /* Provide default help string for mCommands without help text */
-                help = "Show this message";
+                help = "This command has no help text.";
             }
             debug(String.format("%-8s - %s", cmd, help));
         }

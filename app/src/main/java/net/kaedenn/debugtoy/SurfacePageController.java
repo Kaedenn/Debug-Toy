@@ -5,49 +5,53 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 
+import net.kaedenn.debugtoy.util.Logf;
+
 import java.util.Timer;
 
 /** Controller class for the second page's surface.
  *
  */
-class SurfacePageController {
-    private final MainActivity mActivity;
+class SurfacePageController implements SurfaceHolder.Callback {
     private final Timer mTimer;
     private SurfaceAnimation mAnim = null;
+    private boolean mTimerActive = false;
 
-    private static final String LOG_TAG = "surf";
+    private static final String LOG_TAG = "surfacePage";
 
     SurfacePageController() {
-        mActivity = MainActivity.getInstance();
         mTimer = new Timer("mAnim", true);
+        getSurfaceView().getHolder().addCallback(this);
+    }
 
-        SurfaceHolder sh = getSurfaceView().getHolder();
-        sh.addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                Log.i(LOG_TAG, "surfaceCreated with holder " + holder.toString());
-                mAnim = new SurfaceAnimation(holder);
-                mTimer.scheduleAtFixedRate(mAnim, 0, 20);
-            }
+    public void surfaceCreated(SurfaceHolder holder) {
+        Logf.i(LOG_TAG, "surfaceCreated with holder %s", holder.toString());
+        mAnim = new SurfaceAnimation(holder);
+        mTimer.scheduleAtFixedRate(mAnim, 0, 20);
+        mTimerActive = true;
+    }
 
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                Log.i(LOG_TAG, String.format("surfaceChanged with holder %s format=%d w=%d h=%d",
-                        holder.toString(), format, width, height));
-                /* TODO: Determine if redrawFrame is needed */
-                if (mAnim == null) {
-                    Log.e(LOG_TAG, "onSurfaceChanged with null mAnim!!");
-                }
-            }
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        Logf.i(LOG_TAG, "surfaceChanged with holder %s format=%d w=%d h=%d",
+                holder.toString(), format, width, height);
+        /* TODO: Determine if redrawFrame is needed */
+        if (mAnim == null) {
+            Log.e(LOG_TAG, "onSurfaceChanged with null mAnim!!");
+        }
+    }
 
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                Log.i(LOG_TAG, "surfaceDestroyed with holder " + holder.toString());
-                mTimer.cancel();
-                mTimer.purge();
-                mAnim = null;
-            }
-        });
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        Logf.i(LOG_TAG, "surfaceDestroyed with holder %s", holder.toString());
+        if (mTimerActive) {
+            mTimer.cancel();
+            mTimer.purge();
+            mAnim = null;
+            mTimerActive = false;
+        }
+    }
+
+    public boolean isTimerActive() {
+        return mTimerActive;
     }
 
     /** Convenience function to get the managed SurfaceView.
@@ -55,7 +59,7 @@ class SurfacePageController {
      * @return The SurfaceView this class manages
      */
     private SurfaceView getSurfaceView() {
-        return mActivity.findViewById(R.id.page2Surface);
+        return MainActivity.getInstance().findViewById(R.id.page2Surface);
     }
 
     /** Called when the surface appears.
@@ -78,6 +82,8 @@ class SurfacePageController {
      */
     void doDisappear() {
         Log.d(LOG_TAG, "page has disappeared");
-        mAnim.pause();
+        if (mAnim != null) {
+            mAnim.pause();
+        }
     }
 }
