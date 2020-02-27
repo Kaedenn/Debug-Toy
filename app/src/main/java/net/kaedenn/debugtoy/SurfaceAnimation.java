@@ -1,6 +1,5 @@
 package net.kaedenn.debugtoy;
 
-import android.annotation.SuppressLint;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -28,6 +27,8 @@ class SurfaceAnimation extends TimerTask {
     private Rect mSurfaceRect;
     private boolean mIsDrawing = false;
     private boolean mIsPaused = false;
+    private int mFGColor;
+    private int mBGColor;
 
     private static final int PARTICLE_DX_RANGE = 20;
     private static final float PARTICLE_DXDT = 0f;
@@ -53,12 +54,6 @@ class SurfaceAnimation extends TimerTask {
             dx += dxv;
             dy += dyv;
         }
-
-        @SuppressWarnings("unused")
-        @SuppressLint("DefaultLocale")
-        public String toDebugString() {
-            return String.format("Particle({pos:[%g,%g], vel:[%g, %g], size:[%g, %g]})", x, y, dx, dy, w, h);
-        }
     }
 
     private final Particle[] mParticles;
@@ -77,6 +72,8 @@ class SurfaceAnimation extends TimerTask {
     SurfaceAnimation(@NotNull SurfaceHolder sh) {
         mHolder = sh;
         mSurfaceRect = sh.getSurfaceFrame();
+        mFGColor = Color.WHITE;
+        mBGColor = Res.getColor(R.color.colorButtonBG);
         mParticles = new Particle[25];
         for (int i = 0; i < mParticles.length; ++i) {
             Point pSize = getDefaultParticleSize();
@@ -127,9 +124,7 @@ class SurfaceAnimation extends TimerTask {
     }
 
     private void animate() {
-        /* Replace with JNI
-         animate([LParticle;LPoint;)V
-         */
+        /* Replace with JNI animate([LParticle;LPoint;)V */
         for (Particle p : mParticles) {
             if (p.x + p.w < 0) resetParticle(p);
             else if (p.x - p.w > getWidth()) resetParticle(p);
@@ -148,9 +143,9 @@ class SurfaceAnimation extends TimerTask {
         if (mIsPaused) return;
         mIsDrawing = true;
         Paint paint = new Paint();
-        paint.setColor(Color.WHITE);
+        paint.setColor(mFGColor);
         canvas.clipRect(r);
-        canvas.drawColor(Res.getColor(R.color.colorPrimary));
+        canvas.drawColor(mBGColor);
         for (Particle p : mParticles) {
             canvas.drawRect(p.x, p.y, p.x+p.w, p.y+p.h, paint);
         }

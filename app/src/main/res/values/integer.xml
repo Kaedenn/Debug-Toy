@@ -7,4 +7,11 @@
     <integer name="pSizeY">5</integer>
     <integer name="pDxRange">20</integer>
     <integer name="pDyRange">0</integer>
+
+    <integer-array name="titleAnimColors">
+        <item>0xFFFF0000</item> <!-- red -->
+        <item>0xFF00FF00</item> <!-- green -->
+        <item>0xFF0000FF</item> <!-- blue -->
+        <item>0xFFFF0000</item> <!-- red -->
+    </integer-array>
 </resources>

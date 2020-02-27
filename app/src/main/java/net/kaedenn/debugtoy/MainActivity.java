@@ -2,6 +2,7 @@ package net.kaedenn.debugtoy;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -9,10 +10,10 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.system.Os;
 import android.text.Html;
-import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.RadioButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,13 +62,18 @@ public class MainActivity extends Activity {
     private View page3 = null;
     private View currentPage = null;
 
-    /* Controller for the first page. Public for other pages to use.  */
+    /* Types of navigation animation for switching the active page */
+    private static final int PAGE_NO_ANIMATION = 0;
+    private static final int PAGE_FADE_ANIMATION = 1;
+    private static final int PAGE_SLIDE_ANIMATION = 2;
+    private int mPageAnimationType = PAGE_FADE_ANIMATION;
+
+    /* Controller for the first page. Public for other pages to use */
     public DebugPageController debug = null;
 
     /* Controller for the second page */
     private SurfacePageController surfaceController = null;
 
-    /* Application-specific files should be stored here */
     /** Create the activity.
      *
      * This function performs initial setup for the three pages:
@@ -99,6 +105,7 @@ public class MainActivity extends Activity {
         setPage(page1);
 
         /* TODO: Allow swiping between pages and remove the page buttons entirely */
+        /* https://github.com/codepath/android_guides/wiki/Gestures-and-Touch-Events */
         /* https://developer.android.com/training/gestures/viewgroup#intercept */
         /* https://developer.android.com/reference/android/view/ViewGroup */
 
@@ -170,9 +177,32 @@ public class MainActivity extends Activity {
         /* Register the "html-title" command */
         debug.register(new Command("html-title", arg -> titleController.addMessage(Html.fromHtml(arg, 0)), "add HTML title message"));
 
+        /* Register the "anim" command */
+        debug.register(new Command("anim", arg -> {
+            try {
+                int animMode = Integer.parseInt(arg);
+                switch (animMode) {
+                    case PAGE_NO_ANIMATION:
+                    case PAGE_FADE_ANIMATION:
+                    case PAGE_SLIDE_ANIMATION:
+                        mPageAnimationType = animMode;
+                        debug.debugf("Set animation type to %d", animMode);
+                        break;
+                    default:
+                        debug.debugf("Invalid animation index %d", animMode);
+                        break;
+                }
+            }
+            catch (NumberFormatException e) {
+                debug.debugf("Failed to parse argument \"%s\" as a number: %s", arg, e.toString());
+            }
+        }, "change the page animation type"));
+
         /* Begin setup for page 2 */
 
+        /* Disable surface page entirely for now
         surfaceController = new SurfacePageController();
+         */
 
         /* Begin setup for page 3 */
 
@@ -182,12 +212,11 @@ public class MainActivity extends Activity {
      *
      * @param event The motion event to process.
      * @return True when the event is consumed, false otherwise.
-     *
-     * @see Activity#onTouchEvent(MotionEvent)
      */
     @SuppressLint("DefaultLocale")
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
+        Logf.dc("Obtained final touch event %s", event.toString());
         int action = event.getActionMasked();
         switch (action) {
             case (MotionEvent.ACTION_DOWN) :
@@ -215,12 +244,14 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Process a touch event.
+    /** Intercepts a touch event.
      *
      * @param event The motion event to process.
+     * @return True if the event should be consumed, false otherwise.
      */
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
+        Logf.dc("Received touch event %s, dispatching", event.toString());
         return super.dispatchTouchEvent(event);
     }
 
@@ -239,37 +270,96 @@ public class MainActivity extends Activity {
         currentPage = page;
     }
 
-    /** Change the active page.
+    /** Navigate to a different page with an animation.
      *
-     * @param targetPage The page to move to
+     * This method also executes any code necessary to load or unload a specific
+     * page, such as calling any "entering page" or "leaving page" methods.
+     *
+     * Does nothing if the source and target pages are the same (or if one of
+     * them are {@code null}).
+     *
+     * @param targetPage The page to navigate to.
      */
     private void selectPage(View targetPage) {
-        View currentView = currentPage;
-        if (currentView != null && targetPage != null && currentView != targetPage) {
+        if (currentPage != null && targetPage != null && currentPage != targetPage) {
             /* Transition between currentPage and targetPage */
-            targetPage.setAlpha(0);
-            targetPage.setVisibility(View.VISIBLE);
-            targetPage.animate()
-                    .alpha(1f)
-                    .setDuration(Res.getInteger(R.integer.pageAnimationDuration))
-                    .setListener(null);
-            currentView.animate()
-                    .alpha(0f)
-                    .setDuration(Res.getInteger(R.integer.pageAnimationDuration))
-                    .setListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            currentView.setVisibility(View.GONE);
-                        }
-                    });
+            animatePageTransition(currentPage, targetPage);
             /* Handle code unique to each page */
+            /* The page 2 animation is disabled at the moment.
             if (targetPage == page2) {
-                surfaceController.doAppear();
+                surfaceController.doEnterPage();
             } else if (currentPage == page2) {
-                surfaceController.doDisappear();
+                surfaceController.doLeavePage();
             }
+            */
         }
         currentPage = targetPage;
+    }
+
+    /** Handle the animation logic to transition from one page to another.
+     *
+     * Animations are set via {@code mPageAnimationType} and each animation type
+     * has its own animation logic.
+     *
+     * @param pageFrom The page we're navigating from.
+     * @param pageTo The page we're navigating to.
+     */
+    private void animatePageTransition(View pageFrom, View pageTo) {
+        final int animDuration = Res.getInteger(R.integer.pageAnimationDuration);
+        switch (mPageAnimationType) {
+            case PAGE_NO_ANIMATION: {
+                /* Simple case: pages just appear and disappear. No animation */
+                pageTo.setVisibility(View.VISIBLE);
+                pageFrom.setVisibility(View.GONE);
+            } break;
+            case PAGE_FADE_ANIMATION: {
+                /* Fading animation: pages cross-fade */
+                /* Set the destination page as visible (but transparent) */
+                pageTo.setAlpha(0);
+                pageTo.setVisibility(View.VISIBLE);
+                /* Animate the destination page to visible */
+                pageTo.animate()
+                        .alpha(1f)
+                        .setDuration(animDuration)
+                        .setListener(null);
+                /* Animate the source page to transparent */
+                pageFrom.animate()
+                        .alpha(0f)
+                        .setDuration(animDuration)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                pageFrom.setVisibility(View.GONE);
+                                pageFrom.setAlpha(1f);
+                            }
+                        });
+            } break;
+            case PAGE_SLIDE_ANIMATION: {
+                /* Sliding animation: pages slide in and out horizontally */
+                Point screenSize = getScreenSize();
+                /* Scroll pageFrom from 0 to -screenSize.x */
+                ObjectAnimator fromAnim = ObjectAnimator.ofFloat(pageFrom, "translationX", -screenSize.x);
+                fromAnim.setDuration(animDuration);
+                fromAnim.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        Logf.d(LOG_TAG, "Sliding animation from %s to %s complete", pageFrom, pageTo);
+                        pageFrom.setVisibility(View.GONE);
+                        super.onAnimationEnd(animation);
+                    }
+                });
+                fromAnim.start();
+                /* Scroll pageTo from screenSize.x to 0 */
+                pageTo.setTranslationX(screenSize.x);
+                pageTo.setVisibility(View.VISIBLE);
+                ObjectAnimator.ofFloat(pageTo, "translationX", 0f)
+                        .setDuration(animDuration)
+                        .start();
+            } break;
+            default:
+                Logf.ec("Invalid page transition selection %d", mPageAnimationType);
+                break;
+        }
     }
 
     /** Show a "Snack Bar" message.
@@ -379,6 +469,30 @@ public class MainActivity extends Activity {
                 showSnack(String.format(err_f, switchView.getId()));
                 break;
         }
+    }
+
+    public void onPageAnimationSelection(@NotNull View radioButton) {
+        if (!(radioButton instanceof RadioButton)) {
+            throw new AssertionError("Page animation selection object must be a RadioButton; got: " + radioButton.toString());
+        }
+        switch (radioButton.getId()) {
+            case R.id.radioAnimNone:
+                mPageAnimationType = PAGE_NO_ANIMATION;
+                break;
+            case R.id.radioAnimFade:
+                mPageAnimationType = PAGE_FADE_ANIMATION;
+                break;
+            case R.id.radioAnimSlide:
+                mPageAnimationType = PAGE_SLIDE_ANIMATION;
+                break;
+            default:
+                Logf.ec("Invalid radio button ID %d from %s", radioButton.getId(), radioButton.toString());
+                break;
+        }
+    }
+
+    public void onViewClickDefault(@NotNull View view) {
+        debug.debugf("Clicked on view %s", view.toString());
     }
 
     /** Get the device's screen size.

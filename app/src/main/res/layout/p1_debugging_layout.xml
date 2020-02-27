@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/page1"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:visibility="visible"
-    tools:visibility="gone"
     tools:showIn="@layout/activity_main">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -26,7 +25,9 @@
             android:id="@+id/debugTextScroll"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            android:fadeScrollbars="true"
             android:focusable="false"
+            android:saveEnabled="true"
             app:layout_constraintBottom_toTopOf="@id/debugCommand"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -44,6 +45,7 @@
                 android:scrollbarStyle="insideInset"
                 android:scrollbars="vertical"
                 android:singleLine="false"
+                android:textIsSelectable="true"
                 android:textSize="@dimen/debugTextSize" />
         </ScrollView>
 
@@ -58,7 +60,10 @@
             android:gravity="center"
             android:hint="@string/debug_command_hint"
             android:importantForAutofill="no"
-            android:inputType="none"
+            android:inputType="none|textNoSuggestions"
+            android:nextFocusRight="@id/btDebug"
+            android:nextFocusDown="@id/btDebug"
+            android:nextFocusForward="@id/btDebug"
             android:singleLine="true"
             android:textSize="@dimen/debugTextSize"
             app:layout_constraintBottom_toTopOf="@id/debugButtons"
@@ -83,6 +88,10 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_main"
                 android:minHeight="@dimen/btnHeight"
+                android:nextFocusLeft="@id/debugCommand"
+                android:nextFocusRight="@id/btClear"
+                android:nextFocusUp="@id/debugCommand"
+                android:nextFocusForward="@id/btClear"
                 android:onClick="onButtonClick"
                 android:text="@string/debug_button_text"
                 android:textColor="@android:color/primary_text_light"
@@ -96,6 +105,10 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_main"
                 android:minHeight="@dimen/btnHeight"
+                android:nextFocusLeft="@id/btDebug"
+                android:nextFocusRight="@id/btClearAll"
+                android:nextFocusUp="@id/debugCommand"
+                android:nextFocusForward="@id/btClearAll"
                 android:onClick="onButtonClick"
                 android:text="@string/clear_button_text"
                 android:textColor="@android:color/primary_text_light"
@@ -109,6 +122,8 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_main"
                 android:minHeight="@dimen/btnHeight"
+                android:nextFocusLeft="@id/btClear"
+                android:nextFocusUp="@id/debugCommand"
                 android:onClick="onButtonClick"
                 android:text="@string/clear_all_button_text"
                 android:textColor="@android:color/primary_text_light"
@@ -117,4 +132,4 @@
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-</RelativeLayout>
+</android.widget.RelativeLayout>

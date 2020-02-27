@@ -1,9 +1,7 @@
 package net.kaedenn.debugtoy;
 
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 
@@ -20,6 +18,7 @@ class SurfacePageController implements SurfaceHolder.Callback {
     static {
         Logf.getInstance().add(SurfacePageController.class, LOG_TAG);
     }
+    private static final String TIMER_NAME = "mAnim";
 
     private Timer mTimer;
     private SurfaceAnimation mAnim;
@@ -30,25 +29,25 @@ class SurfacePageController implements SurfaceHolder.Callback {
      * timer; that's done when the page appears.
      */
     SurfacePageController() {
-        mAnim = new SurfaceAnimation(getSurfaceView().getHolder());
-        mTimer = new Timer("mAnim", true);
-        getSurfaceView().getHolder().addCallback(this);
+        SurfaceHolder holder = getSurfaceView().getHolder();
+        holder.addCallback(this);
+        mAnim = new SurfaceAnimation(holder);
     }
 
-    /** Start (or restart) the animation timer.
-     *
-     */
+    /** Start (or restart) the animation timer. */
     private void startTimer(@NonNull SurfaceHolder holder) {
         if (mTimer != null) {
             stopTimer();
         }
-        mTimer = new Timer("mAnim", true);
+        if (mAnim == null) {
+            mAnim = new SurfaceAnimation(holder);
+        }
+        mAnim.updateHolder(holder);
+        mTimer = new Timer(TIMER_NAME, true);
         mTimer.scheduleAtFixedRate(mAnim, 0, Res.getInteger(R.integer.animRate));
     }
 
-    /** Stop the animation timer.
-     *
-     */
+    /** Stop the animation timer. */
     private void stopTimer() {
         if (mTimer != null) {
             mTimer.cancel(); /* stop animation from running */
@@ -97,23 +96,19 @@ class SurfacePageController implements SurfaceHolder.Callback {
         return MainActivity.getInstance().findViewById(R.id.page2Surface);
     }
 
-    /** Called when the surface appears.
-     *
-     * Called when the containing page goes from either {@value View#GONE} or
-     * {@value View#INVISIBLE} to {@value View#VISIBLE}.
-     */
-    void doAppear() {
+    /** Called when the user navigates to the surface page. */
+    void doEnterPage() {
         Logf.dc("page has appeared");
-        mAnim.unpause();
+        if (mAnim != null) {
+            mAnim.unpause();
+        }
     }
 
-    /** Called when the surface disappears.
-     *
-     * Called when the containing page goes from {@value View#GONE} to either
-     * {@value View#INVISIBLE} or {@value View#VISIBLE}.
-     */
-    void doDisappear() {
+    /** Called when the user navigates away from the surface page. */
+    void doLeavePage() {
         Logf.dc("page has disappeared");
-        mAnim.pause();
+        if (mAnim != null) {
+            mAnim.pause();
+        }
     }
 }

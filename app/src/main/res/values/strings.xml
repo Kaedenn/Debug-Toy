@@ -14,13 +14,22 @@
     <string name="err_no_cmd_f">Failed to execute command "%s": no such command</string>
     <string name="err_invalid_button_f">Unknown button with ID %d</string>
     <string name="opt_debug_name">Debugging</string>
+
+    <!-- Options labels and strings -->
+    <string name="switchDebug">Debugging</string>
     <string name="switchAnimation">Particle Animation</string>
+    <string name="radioAnim0">No page animation</string>
+    <string name="radioAnim1">Fade page animation</string>
+    <string name="radioAnim2">Slide page animation</string>
 
     <!-- Title messages -->
     <string-array name="title_messages">
         <item>Welcome!</item>
         <item>This is a toy application to investigate Android application development</item>
-        <item><![CDATA[The application is <i>not</i> suitable for use on actual devices]]></item>
-        <item><![CDATA[This title bar supports <b>bold</b> and <i>italicized</i> and <u>underlined</u> and <font color="red">red</font> text]]></item>
+        <item><![CDATA[The application is <b>not</b> suitable for use on actual devices]]></item>
+        <item><![CDATA[<font color="red">Red!</font>]]></item>
+        <item><![CDATA[<font color="green">Green!</font>]]></item>
+        <item><![CDATA[<font color="blue">Blue!</font>]]></item>
+        <item><![CDATA[<font color="red">C</font><font color="orange">o</font><font color="yellow">l</font><font color="green">o</font><font color="blue">r</font><font color="violet">!</font>]]></item>
     </string-array>
 </resources>

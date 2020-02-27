@@ -1,5 +1,8 @@
 package net.kaedenn.debugtoy;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -21,6 +24,7 @@ import androidx.annotation.NonNull;
 
 import net.kaedenn.debugtoy.util.Logf;
 import net.kaedenn.debugtoy.util.RandUtil;
+import net.kaedenn.debugtoy.util.Res;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,10 +46,12 @@ class TitleController {
 
     private Spanned mMessage = null;
     private List<Spanned> mMessageQueue = Collections.synchronizedList(new ArrayList<>());
-    private AnimationSet mAnimation = null;
+    private Animation mAnimation = null;
     private Interpolator mInterpolator;
 
-    private int mStartColor/* = Color.BLACK*/;
+    private float mDurationCoeff = 3.5f;
+
+    private int mStartColor;
 
     @SuppressLint("ClickableViewAccessibility")
     TitleController() {
@@ -53,6 +59,7 @@ class TitleController {
         mHelperView = MainActivity.getInstance().findViewById(R.id.titlebarHelper);
         mTitleView.setOnTouchListener(this::onTitlebarTouchEvent);
         mInterpolator = AnimationUtils.loadInterpolator(MainActivity.getInstance(), android.R.anim.linear_interpolator);
+        mStartColor = mTitleView.getCurrentTextColor();
         Logf.dc("TitleController constructed");
     }
 
@@ -70,19 +77,26 @@ class TitleController {
 
     /** Process touch events on the titlebar
      *
-     * @param v The titlebar view
+     * @param v The titlebar view (ignored; {@code mTitleView} is used)
      * @param event The touch event
      * @return True if the listener has consumed the event, false otherwise
      */
     private boolean onTitlebarTouchEvent(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            /* Apply a random color */
-            mTitleView.setTextColor(RandUtil.getColor(1f, 0.5f));
-            /* TODO: Add other effects? */
-            Animation scaleAnim = AnimationUtils.loadAnimation(MainActivity.getInstance().getApplicationContext(), R.anim.title_scale);
-            scaleAnim.setDuration(50);
-            mAnimation.addAnimation(scaleAnim);
-            /* TODO: Ensure effects are cleared for next message */
+            /* Color animation: red -> green -> blue -> red (then default) */
+            ObjectAnimator colorAnim = ObjectAnimator.ofArgb(mTitleView, "TextColor", 0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFF0000);
+            colorAnim.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mTitleView.setTextColor(mStartColor);
+                }
+            });
+            colorAnim.setDuration(500); /* TODO: resource */
+            colorAnim.start();
+            /* Scale animation: 100% -> 80% -> 120% -> 100% */
+            ObjectAnimator sizeAnim = ObjectAnimator.ofFloat(mTitleView, "TextScaleX", 1f, 0.8f, 1.2f, 1.0f);
+            sizeAnim.setDuration(500); /* TODO: resource */
+            sizeAnim.start();
             return true;
         }
         return false;
@@ -135,60 +149,34 @@ class TitleController {
         }
     }
 
+    /** Set the duration coefficient for how fast messages move.
+     *
+     * The coefficient is multiplied by the distance the message must travel to
+     * scroll completely across the screen. The result is then used as the
+     * duration of the animation.
+     *
+     * @param speed The coefficient to use.
+     */
+    public void setDurationCoeff(float speed) {
+        mDurationCoeff = speed;
+    }
+
+    /** Get the duration coefficient for how fast messages move.
+     *
+     * @return The coefficient currently being used.
+     */
+    public float getDurationCoeff() {
+        return mDurationCoeff;
+    }
+
     /** Calculate the duration to use for the given distance.
      *
      * @param xDistance The distance the text will animate
      * @return The length of the animation in milliseconds
      */
     private long getDurationFor(float xDistance) {
-        return Math.round(3.5 * xDistance);
+        return Math.round(mDurationCoeff * xDistance);
     }
-
-    /** Custom animation listener.
-     *
-     * Used for the translation animation to trigger the next message when the
-     * current one has finished.
-     */
-    private Animation.AnimationListener mSetListener = new Animation.AnimationListener() {
-        @Override
-        public void onAnimationStart(Animation animation) {
-            Logf.vc("Animation set is starting");
-        }
-
-        @Override
-        public void onAnimationEnd(Animation animation) {
-            Logf.vc("Animation set has ended");
-            startAnimation();
-        }
-
-        @Override
-        public void onAnimationRepeat(Animation animation) {
-            Logf.vc("Animation set is repeating");
-        }
-    };
-
-    /** Custom animation listener.
-     *
-     * Used for the translation animation to trigger the next message when the
-     * current one has finished.
-     */
-    private Animation.AnimationListener mTranslateListener = new Animation.AnimationListener() {
-        @Override
-        public void onAnimationStart(Animation animation) {
-            Logf.vc("Translation animation is starting");
-        }
-
-        @Override
-        public void onAnimationEnd(Animation animation) {
-            Logf.vc("Translation animation has ended");
-            startAnimation();
-        }
-
-        @Override
-        public void onAnimationRepeat(Animation animation) {
-            Logf.vc("Translation animation is repeating");
-        }
-    };
 
     /** Start the animation.
      *
@@ -200,9 +188,6 @@ class TitleController {
      */
     private void startAnimation() {
         Spanned data = getNextMessage();
-        mAnimation = new AnimationSet(true);
-        mAnimation.setInterpolator(mInterpolator);
-        mAnimation.setAnimationListener(mSetListener);
         if (data != null) {
             /* Measure the width of the spanned using the helper view */
             mHelperView.setText(data);
@@ -221,13 +206,24 @@ class TitleController {
             mTitleView.setLayoutParams(params);
 
             /* Construct the animation */
-            Animation anim = new TranslateAnimation(xStart, xEnd, 0f, 0f);
-            anim.setDuration(duration);
-            anim.setAnimationListener(mTranslateListener);
+            mAnimation = new TranslateAnimation(xStart, xEnd, 0f, 0f);
+            mAnimation.setDuration(duration);
+            mAnimation.setInterpolator(mInterpolator);
+            mAnimation.setAnimationListener(new Animation.AnimationListener() {
+                public void onAnimationStart(Animation animation) {
+                }
+
+                public void onAnimationEnd(Animation animation) {
+                    startAnimation();
+                }
+
+                public void onAnimationRepeat(Animation animation) {
+                }
+            });
 
             /* Start the animation */
-            mAnimation.addAnimation(anim);
             mTitleView.post(() -> {
+                mTitleView.clearAnimation(); /* Just in case */
                 mTitleView.setTextColor(mStartColor);
                 mTitleView.setText(data);
                 mTitleView.startAnimation(mAnimation);

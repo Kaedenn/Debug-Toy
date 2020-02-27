@@ -1,48 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:id="@+id/page3"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:visibility="invisible"
-    tools:visibility="visible"
+<android.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:id="@+id/page3"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:showIn="@layout/activity_main">
 
-    <ConstraintLayout
-        android:id="@+id/constraintLayout"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="visible">
+        android:layout_height="match_parent">
 
-        <ScrollView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="visible">
 
-            <LinearLayout
+
+            <Switch
+                android:id="@+id/switchDebug"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:checked="true"
+                android:nextFocusDown="@id/switchAnimation"
+                android:onClick="onSwitchToggle"
+                android:text="@string/opt_debug_name" />
 
-                <Switch
-                    android:id="@+id/switchDebug"
+            <Switch
+                android:id="@+id/switchAnimation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:nextFocusUp="@id/switchDebug"
+                android:nextFocusDown="@id/radioAnimNone"
+                android:onClick="onSwitchToggle"
+                android:text="@string/switchAnimation" />
+
+            <RadioGroup
+                android:id="@+id/pageAnimationSelection"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:checkedButton="@id/radioAnimFade">
+
+                <RadioButton
+                    android:id="@+id/radioAnimNone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:onClick="onSwitchToggle"
-                    android:text="@string/opt_debug_name" />
+                    android:nextFocusUp="@id/switchAnimation"
+                    android:nextFocusDown="@id/radioAnimFade"
+                    android:onClick="onPageAnimationSelection"
+                    android:text="@string/radioAnim0" />
 
-                <Switch
-                    android:id="@+id/switchAnimation"
+                <RadioButton
+                    android:id="@+id/radioAnimFade"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:onClick="onSwitchToggle"
-                    android:text="@string/switchAnimation" />
+                    android:nextFocusUp="@id/radioAnimNone"
+                    android:nextFocusDown="@id/radioAnimSlide"
+                    android:onClick="onPageAnimationSelection"
+                    android:text="@string/radioAnim1" />
 
-            </LinearLayout>
-        </ScrollView>
+                <RadioButton
+                    android:id="@+id/radioAnimSlide"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="onPageAnimationSelection"
+                    android:text="@string/radioAnim2" />
+            </RadioGroup>
 
-    </ConstraintLayout>
-</RelativeLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</android.widget.RelativeLayout>
