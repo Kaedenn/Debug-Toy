@@ -18,15 +18,18 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
 import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import net.kaedenn.debugtoy.util.AnimationListenerAdapter;
 import net.kaedenn.debugtoy.util.Logf;
 import net.kaedenn.debugtoy.util.RandUtil;
 import net.kaedenn.debugtoy.util.Res;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,6 +40,10 @@ class TitleController {
     }
 
     private static final float TEXT_MARGIN = 0.1f;
+
+    /* Values used for interactive titlebar animations */
+    private static final int[] TITLE_ANIM_COLORS = {0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFF0000};
+    private static final float[] TITLE_ANIM_SCALE_VALUES = {1f, .8f, 1.2f, 1f};
 
     @NonNull
     private TextView mTitleView;
@@ -84,18 +91,17 @@ class TitleController {
     private boolean onTitlebarTouchEvent(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             /* Color animation: red -> green -> blue -> red (then default) */
-            ObjectAnimator colorAnim = ObjectAnimator.ofArgb(mTitleView, "TextColor", 0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFF0000);
+            ObjectAnimator colorAnim = ObjectAnimator.ofArgb(mTitleView, "TextColor", TITLE_ANIM_COLORS);
             colorAnim.addListener(new AnimatorListenerAdapter() {
-                @Override
                 public void onAnimationEnd(Animator animation) {
                     mTitleView.setTextColor(mStartColor);
                 }
             });
-            colorAnim.setDuration(500); /* TODO: resource */
+            colorAnim.setDuration(Res.getInteger(R.integer.tbTouchAnimDuration));
             colorAnim.start();
             /* Scale animation: 100% -> 80% -> 120% -> 100% */
-            ObjectAnimator sizeAnim = ObjectAnimator.ofFloat(mTitleView, "TextScaleX", 1f, 0.8f, 1.2f, 1.0f);
-            sizeAnim.setDuration(500); /* TODO: resource */
+            ObjectAnimator sizeAnim = ObjectAnimator.ofFloat(mTitleView, "TextScaleX", TITLE_ANIM_SCALE_VALUES);
+            sizeAnim.setDuration(Res.getInteger(R.integer.tbTouchAnimDuration));
             sizeAnim.start();
             return true;
         }
@@ -209,15 +215,9 @@ class TitleController {
             mAnimation = new TranslateAnimation(xStart, xEnd, 0f, 0f);
             mAnimation.setDuration(duration);
             mAnimation.setInterpolator(mInterpolator);
-            mAnimation.setAnimationListener(new Animation.AnimationListener() {
-                public void onAnimationStart(Animation animation) {
-                }
-
+            mAnimation.setAnimationListener(new AnimationListenerAdapter() {
                 public void onAnimationEnd(Animation animation) {
                     startAnimation();
-                }
-
-                public void onAnimationRepeat(Animation animation) {
                 }
             });
 
