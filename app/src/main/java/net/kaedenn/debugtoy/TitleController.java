@@ -4,69 +4,103 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
-import android.graphics.Color;
 import android.graphics.Point;
+import android.os.Debug;
 import android.text.Spanned;
 import android.text.SpannedString;
-import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
-import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
-import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
 import net.kaedenn.debugtoy.util.AnimationListenerAdapter;
 import net.kaedenn.debugtoy.util.Logf;
-import net.kaedenn.debugtoy.util.RandUtil;
 import net.kaedenn.debugtoy.util.Res;
+import net.kaedenn.debugtoy.util.TypedData;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+@SuppressWarnings("WeakerAccess")
 class TitleController {
-    private static final String LOG_TAG = "title";
+    private static final String LOG_TAG = "title-controller";
     static {
         Logf.getInstance().add(TitleController.class, LOG_TAG);
     }
 
+    /* Extra margin to add to the scroll ending x coordinate (multiplied by the
+     * current screen width) */
     private static final float TEXT_MARGIN = 0.1f;
+
+    /* Default duration coefficient */
+    private static final float DEFAULT_DURATION_COEFFICIENT = 3.5f;
 
     /* Values used for interactive titlebar animations */
     private static final int[] TITLE_ANIM_COLORS = {0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFF0000};
     private static final float[] TITLE_ANIM_SCALE_VALUES = {1f, .8f, 1.2f, 1f};
 
+    /* View that the user will see */
     @NonNull
     private TextView mTitleView;
 
+    /* Helper view used to calculate the width of the next message */
     @NonNull
     private TextView mHelperView;
 
+    /* Current message set by getNextMessage. Null if no message is animating */
     private Spanned mMessage = null;
-    private List<Spanned> mMessageQueue = Collections.synchronizedList(new ArrayList<>());
+
+    /* Queue of messages to animate */
+    @NonNull
+    private List<Spanned> mMessageQueue;
+
+    /* Current animation being applied to mTitleView */
     private Animation mAnimation = null;
+
+    /* mAnimation interpolator */
+    @NonNull
     private Interpolator mInterpolator;
 
-    private float mDurationCoeff = 3.5f;
+    /* Duration coefficient for mAnimation */
+    private float mDurationCoeff;
 
+    /* Color to apply by default at the start of every message */
     private int mStartColor;
 
+    /** Construct the controller class.
+     *
+     * Default interpolator: {@code android.R.anim.linear_interpolator}.
+     * Default duration coefficient: {@code DEFAULT_DURATION_COEFFICIENT}.
+     * Default starting color: {@code mTitleView}'s current text color.
+     */
     @SuppressLint("ClickableViewAccessibility")
-    TitleController() {
+    public TitleController() {
         mTitleView = MainActivity.getInstance().findViewById(R.id.titlebar);
         mHelperView = MainActivity.getInstance().findViewById(R.id.titlebarHelper);
         mTitleView.setOnTouchListener(this::onTitlebarTouchEvent);
+        mMessageQueue = Collections.synchronizedList(new ArrayList<>());
         mInterpolator = AnimationUtils.loadInterpolator(MainActivity.getInstance(), android.R.anim.linear_interpolator);
+        mDurationCoeff = DEFAULT_DURATION_COEFFICIENT;
         mStartColor = mTitleView.getCurrentTextColor();
+
+        /* Ensure the title view and helper view are truly identical */
+        if (mTitleView.getGravity() != mHelperView.getGravity()) {
+            Logf.ec("mHelperView gravity %d differs from mTitleView gravity %d", mHelperView.getGravity(), mTitleView.getGravity());
+            mHelperView.setGravity(mTitleView.getGravity());
+        }
         Logf.dc("TitleController constructed");
     }
 
@@ -78,7 +112,7 @@ class TitleController {
      *
      * @param c The color to use
      */
-    synchronized void setTextColor(int c) {
+    public void setTextColor(int c) {
         mStartColor = c;
     }
 
@@ -90,7 +124,6 @@ class TitleController {
      */
     private boolean onTitlebarTouchEvent(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            /* Color animation: red -> green -> blue -> red (then default) */
             ObjectAnimator colorAnim = ObjectAnimator.ofArgb(mTitleView, "TextColor", TITLE_ANIM_COLORS);
             colorAnim.addListener(new AnimatorListenerAdapter() {
                 public void onAnimationEnd(Animator animation) {
@@ -99,10 +132,9 @@ class TitleController {
             });
             colorAnim.setDuration(Res.getInteger(R.integer.tbTouchAnimDuration));
             colorAnim.start();
-            /* Scale animation: 100% -> 80% -> 120% -> 100% */
-            ObjectAnimator sizeAnim = ObjectAnimator.ofFloat(mTitleView, "TextScaleX", TITLE_ANIM_SCALE_VALUES);
-            sizeAnim.setDuration(Res.getInteger(R.integer.tbTouchAnimDuration));
-            sizeAnim.start();
+            ObjectAnimator.ofFloat(mTitleView, "TextScaleX", TITLE_ANIM_SCALE_VALUES)
+                    .setDuration(Res.getInteger(R.integer.tbTouchAnimDuration))
+                    .start();
             return true;
         }
         return false;
@@ -112,7 +144,7 @@ class TitleController {
      *
      * @param s The {@code Spanned} instance.
      */
-    synchronized void addMessage(Spanned s) {
+    public void addMessage(@NotNull Spanned s) {
         mMessageQueue.add(s);
         maybeStartAnimation();
     }
@@ -122,7 +154,7 @@ class TitleController {
      * @param s The string to add.
      * @see TitleController#addMessage(Spanned)
      */
-    synchronized void addMessage(String s) {
+    public void addMessage(@NotNull String s) {
         addMessage(new SpannedString(s));
         maybeStartAnimation();
     }
@@ -136,7 +168,7 @@ class TitleController {
      * queued, which should result in the animation terminating.
      */
     private Spanned getNextMessage() {
-        Logf.v(LOG_TAG, "getNextMessage: queue has %d items", mMessageQueue.size());
+        Logf.vc("getNextMessage: queue has %d items", mMessageQueue.size());
         if (!mMessageQueue.isEmpty()) {
             mMessage = mMessageQueue.remove(0);
         }
@@ -161,10 +193,14 @@ class TitleController {
      * scroll completely across the screen. The result is then used as the
      * duration of the animation.
      *
-     * @param speed The coefficient to use.
+     * @param coeff The coefficient to use.
      */
-    public void setDurationCoeff(float speed) {
-        mDurationCoeff = speed;
+    public void setDurationCoeff(float coeff) {
+        if (coeff > 0f) {
+            mDurationCoeff = coeff;
+        } else {
+            Logf.ec("Invalid duration coefficient %g; must be greater than zero", coeff);
+        }
     }
 
     /** Get the duration coefficient for how fast messages move.
@@ -181,7 +217,7 @@ class TitleController {
      * @return The length of the animation in milliseconds
      */
     private long getDurationFor(float xDistance) {
-        return Math.round(mDurationCoeff * xDistance);
+        return Math.round(getDurationCoeff() * xDistance);
     }
 
     /** Start the animation.
@@ -201,10 +237,13 @@ class TitleController {
             int width = mHelperView.getMeasuredWidth();
 
             /* Calculate offsets and the duration */
-            Point screenSize = MainActivity.getInstance().getScreenSize();
-            float xStart = screenSize.x;
-            float xEnd = -(width + screenSize.x * TEXT_MARGIN);
+            int screenWidth = MainActivity.getInstance().getScreenWidth();
+            float xStart = screenWidth + screenWidth * TEXT_MARGIN;
+            float xEnd = -(width + screenWidth * TEXT_MARGIN);
             long duration = getDurationFor(Math.abs(xStart - xEnd));
+            if (mTitleView.getGravity() == Gravity.CENTER_HORIZONTAL) {
+                Logf.ic("Unimplemented CENTER_HORIZONTAL gravity");
+            }
 
             /* Ensure the text box is large enough to store the string */
             ViewGroup.LayoutParams params = mTitleView.getLayoutParams();
@@ -223,10 +262,22 @@ class TitleController {
 
             /* Start the animation */
             mTitleView.post(() -> {
+                Map<String, TypedValue> debugMap = null;
+                if (Debug.isDebuggerConnected()) {
+                    debugMap = new HashMap<>();
+                    debugMap.put("screenWidth", TypedData.of(screenWidth));
+                    debugMap.put("xStart", TypedData.of(xStart));
+                    debugMap.put("xEnd", TypedData.of(xEnd));
+                    debugMap.put("duration", TypedData.of(duration));
+                    Logf.dc("Debug map created");
+                }
                 mTitleView.clearAnimation(); /* Just in case */
                 mTitleView.setTextColor(mStartColor);
                 mTitleView.setText(data);
                 mTitleView.startAnimation(mAnimation);
+                if (debugMap != null) {
+                    Logf.dc("Debug map: %d items", debugMap.size());
+                }
             });
         }
     }

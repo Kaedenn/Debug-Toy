@@ -1,6 +1,8 @@
 package net.kaedenn.debugtoy.util;
 
 import android.annotation.SuppressLint;
+import android.text.Html;
+import android.text.Spanned;
 
 @SuppressLint("DefaultLocale")
 @SuppressWarnings({"unused", "WeakerAccess"})
@@ -25,10 +27,12 @@ public final class StringUtil {
 
     /** Escape a single character.
      *
+     * XXX: Do not use for input sanitation.
+     *
      * @param c The character to escape
      * @return The escape sequence for the character, if one is needed
      */
-    public static String escapeChar(char c) {
+    public static String escape(char c) {
         if (c == '\0') {
             return "\\0";
         } else if (c == '\r') {
@@ -52,6 +56,9 @@ public final class StringUtil {
 
     /** Return a string with the characters of {@param s}, escaped if needed.
      *
+     * XXX: Do not use for input sanitation. Using this for input sanitation
+     * will lead to buffer overrun problems and likely arbitrary code execution.
+     *
      * @param s The string to escape
      * @return The new string
      */
@@ -59,10 +66,52 @@ public final class StringUtil {
         StringBuilder sb = new StringBuilder();
         sb.append("\"");
         for (char c : s.toCharArray()) {
-            sb.append(escapeChar(c));
+            sb.append(escape(c));
         }
         sb.append("\"");
         return sb.toString();
     }
 
+    public static class HTML {
+        private static Spanned wrap(String s, boolean escape, String tagStart, String tagEnd) {
+            String text = escape ? Html.escapeHtml(s) : s;
+            return Html.fromHtml(tagStart + text + tagEnd, 0);
+        }
+        public static Spanned bold(String s, boolean escape) {
+            return wrap(s, escape, "<b>", "</b>");
+        }
+        public static Spanned bold(String s) {
+            return wrap(s, true, "<b>", "</b>");
+        }
+        public static Spanned italic(String s, boolean escape) {
+            return wrap(s, escape, "<i>", "</i>");
+        }
+        public static Spanned italic(String s) {
+            return wrap(s, true, "<i>", "</i>");
+        }
+        public static Spanned underline(String s, boolean escape) {
+            return wrap(s, escape, "<u>", "</u>");
+        }
+        public static Spanned underline(String s) {
+            return wrap(s, true, "<u>", "</u>");
+        }
+        public static Spanned strikethrough(String s, boolean escape) {
+            return wrap(s, escape, "<s>", "</s>");
+        }
+        public static Spanned strikethrough(String s) {
+            return wrap(s, true, "<s>", "</s>");
+        }
+        public static Spanned subscript(String s, boolean escape) {
+            return wrap(s, escape, "<sub>", "</sub>");
+        }
+        public static Spanned subscript(String s) {
+            return wrap(s, true, "<sub>", "</sub>");
+        }
+        public static Spanned superscript(String s, boolean escape) {
+            return wrap(s, escape, "<sup>", "</sup>");
+        }
+        public static Spanned superscript(String s) {
+            return wrap(s, true, "<sup>", "</sup>");
+        }
+    }
 }

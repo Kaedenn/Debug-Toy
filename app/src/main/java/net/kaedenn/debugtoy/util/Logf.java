@@ -15,7 +15,7 @@ import java.util.HashMap;
  *
  *
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class Logf {
     /* Start of Logf singleton pattern */
 
@@ -153,44 +153,34 @@ public class Logf {
 
     /* Start of static Logf methods */
 
-    @SuppressWarnings("WeakerAccess")
     public static void v(String tag, String format, Object... args) {
         Log.v(tag, String.format(format, args));
     }
-    @SuppressWarnings("WeakerAccess")
     public static void d(String tag, String format, Object... args) {
         Log.d(tag, String.format(format, args));
     }
-    @SuppressWarnings("WeakerAccess")
     public static void i(String tag, String format, Object... args) {
         Log.i(tag, String.format(format, args));
     }
-    @SuppressWarnings("WeakerAccess")
     public static void w(String tag, String format, Object... args) {
         Log.w(tag, String.format(format, args));
     }
-    @SuppressWarnings("WeakerAccess")
     public static void e(String tag, String format, Object... args) {
         Log.e(tag, String.format(format, args));
     }
 
-    @SuppressWarnings("WeakerAccess")
     public static void vc(String format, Object... args) {
         v(getCallerTag(), format, args);
     }
-    @SuppressWarnings("WeakerAccess")
     public static void dc(String format, Object... args) {
         d(getCallerTag(), format, args);
     }
-    @SuppressWarnings("WeakerAccess")
     public static void ic(String format, Object... args) {
         i(getCallerTag(), format, args);
     }
-    @SuppressWarnings("WeakerAccess")
     public static void wc(String format, Object... args) {
         w(getCallerTag(), format, args);
     }
-    @SuppressWarnings("WeakerAccess")
     public static void ec(String format, Object... args) {
         e(getCallerTag(), format, args);
     }

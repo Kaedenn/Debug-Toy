@@ -10,12 +10,12 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.system.Os;
 import android.text.Html;
+import android.text.Spanned;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RadioButton;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -66,13 +66,14 @@ public class MainActivity extends Activity {
     private static final int PAGE_NO_ANIMATION = 0;
     private static final int PAGE_FADE_ANIMATION = 1;
     private static final int PAGE_SLIDE_ANIMATION = 2;
-    private int mPageAnimationType = PAGE_FADE_ANIMATION;
+    private int mPageAnimationType = PAGE_SLIDE_ANIMATION;
 
     /* Controller for the first page. Public for other pages to use */
     public DebugPageController debug = null;
 
-    /* Controller for the second page */
+    /* Controller for the second page (disabled)
     private SurfacePageController surfaceController = null;
+     */
 
     /** Create the activity.
      *
@@ -96,7 +97,6 @@ public class MainActivity extends Activity {
 
         /* Title bar setup */
         titleController = new TitleController();
-        titleController.setTextColor(((TextView)findViewById(R.id.titlebar)).getCurrentTextColor());
         for (String s : getResources().getStringArray(R.array.title_messages)) {
             titleController.addMessage(Html.fromHtml(s, 0));
         }
@@ -106,8 +106,6 @@ public class MainActivity extends Activity {
 
         /* TODO: Allow swiping between pages and remove the page buttons entirely */
         /* https://github.com/codepath/android_guides/wiki/Gestures-and-Touch-Events */
-        /* https://developer.android.com/training/gestures/viewgroup#intercept */
-        /* https://developer.android.com/reference/android/view/ViewGroup */
 
         /* Begin setup for page 1 */
 
@@ -122,7 +120,8 @@ public class MainActivity extends Activity {
             Properties p = System.getProperties();
             debug.debugf("Properties: %s", p.size());
             for (Object propKey : p.keySet()) {
-                debug.debugf("\"%s\" - \"%s\"", propKey, p.get(propKey));
+                Spanned s = Html.fromHtml(String.format("<b>%s</b> - %s", propKey, p.get(propKey)), 0);
+                debug.debug(s);
             }
             /* System.getenv */
             System.getenv().forEach((k,v) -> debug.debugf("$%s = %s", k, StringUtil.escape(v)));
@@ -198,9 +197,7 @@ public class MainActivity extends Activity {
             }
         }, "change the page animation type"));
 
-        /* Begin setup for page 2 */
-
-        /* Disable surface page entirely for now
+        /* Begin setup for page 2 (disabled)
         surfaceController = new SurfacePageController();
          */
 
@@ -221,25 +218,21 @@ public class MainActivity extends Activity {
         switch (action) {
             case (MotionEvent.ACTION_DOWN) :
                 Logf.dc("Action was DOWN");
-                debug.debug("Motion DOWN");
                 return true;
             case (MotionEvent.ACTION_MOVE) :
                 Logf.dc("Action was MOVE");
-                debug.debug("Motion MOVE");
                 return true;
             case (MotionEvent.ACTION_UP) :
                 Logf.dc("Action was UP");
-                debug.debug("Motion UP");
                 return true;
             case (MotionEvent.ACTION_CANCEL) :
                 Logf.dc("Action was CANCEL");
-                debug.debug("Motion CANCEL");
                 return true;
             case (MotionEvent.ACTION_OUTSIDE) :
                 Logf.dc("Movement occurred outside of screen bounds");
-                debug.debug("Motion outside");
                 return true;
             default:
+                Logf.ic("Movement had an unknown action %d", action);
                 return super.onTouchEvent(event);
         }
     }
@@ -285,7 +278,7 @@ public class MainActivity extends Activity {
             /* Transition between currentPage and targetPage */
             animatePageTransition(currentPage, targetPage);
             /* Handle code unique to each page */
-            /* The page 2 animation is disabled at the moment.
+            /* The page 2 animation is disabled
             if (targetPage == page2) {
                 surfaceController.doEnterPage();
             } else if (currentPage == page2) {
@@ -491,10 +484,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void onViewClickDefault(@NotNull View view) {
-        debug.debugf("Clicked on view %s", view.toString());
-    }
-
     /** Get the device's screen size.
      *
      * @return The screen size where x is width and y is height.
@@ -504,6 +493,11 @@ public class MainActivity extends Activity {
         Point size = new Point();
         d.getSize(size);
         return size;
+    }
+
+    public int getScreenWidth() {
+        Point size = getScreenSize();
+        return size.x;
     }
 }
 

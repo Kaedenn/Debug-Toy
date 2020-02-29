@@ -14,7 +14,7 @@ import java.util.Timer;
  *
  */
 class SurfacePageController implements SurfaceHolder.Callback {
-    private static final String LOG_TAG = "surfacePage";
+    private static final String LOG_TAG = "surface-controller";
     static {
         Logf.getInstance().add(SurfacePageController.class, LOG_TAG);
     }

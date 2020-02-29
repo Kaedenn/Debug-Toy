@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
 
-import android.util.Log;
+import android.text.Spanned;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
  * {@code cmd_help_default} is used.
  */
 final class DebugPageController {
-    private static final String LOG_TAG = "debugPage";
+    private static final String LOG_TAG = "debug-controller";
     static {
         Logf.getInstance().add(DebugPageController.class, LOG_TAG);
     }
@@ -60,7 +60,6 @@ final class DebugPageController {
      *
      * @return A collection of mCommands, without the default command.
      */
-    @SuppressWarnings("WeakerAccess")
     @NonNull
     Collection<String> getCommands() {
         return mCommands.keySet();
@@ -156,14 +155,6 @@ final class DebugPageController {
         t.append(text);
         t.append("\n");
         scrollToBottom();
-    }
-
-    /** Append a line to the debug text box.
-     *
-     * @param words The words to append
-     */
-    void debug(CharSequence[] words) {
-        debug(String.join(" ", words));
     }
 
     /** Append a formatted message to the debug text box.
