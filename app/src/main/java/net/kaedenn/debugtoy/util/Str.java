@@ -1,12 +1,10 @@
 package net.kaedenn.debugtoy.util;
 
 import android.annotation.SuppressLint;
-import android.text.Html;
-import android.text.Spanned;
 
 @SuppressLint("DefaultLocale")
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class StringUtil {
+public final class Str {
 
     /** Repeat a string.
      *
@@ -72,6 +70,7 @@ public final class StringUtil {
         return sb.toString();
     }
 
+    /* TODO: Find a use or remove altogether.
     public static class HTML {
         private static Spanned wrap(String s, boolean escape, String tagStart, String tagEnd) {
             String text = escape ? Html.escapeHtml(s) : s;
@@ -114,4 +113,5 @@ public final class StringUtil {
             return wrap(s, true, "<sup>", "</sup>");
         }
     }
+    */
 }
