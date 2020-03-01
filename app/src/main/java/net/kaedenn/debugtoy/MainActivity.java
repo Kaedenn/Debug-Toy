@@ -8,9 +8,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Debug;
 import android.system.Os;
 import android.text.Html;
-import android.text.Spanned;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,7 +24,6 @@ import com.google.android.material.snackbar.Snackbar;
 
 import net.kaedenn.debugtoy.util.Logf;
 import net.kaedenn.debugtoy.util.Res;
-import net.kaedenn.debugtoy.util.StringUtil;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,10 +31,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /** Main activity for the {@code net.kaedenn.debugtoy} application. */
+@SuppressLint("DefaultLocale")
 public class MainActivity extends Activity {
 
     /* Logging setup */
@@ -87,16 +86,15 @@ public class MainActivity extends Activity {
      *
      * @param savedInstanceState Saved application information
      */
-    @SuppressLint("DefaultLocale")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mActivity = new WeakReference<>(this);
         setContentView(R.layout.activity_main);
 
-        page1 = findViewById(R.id.page1);
-        page2 = findViewById(R.id.page2);
-        page3 = findViewById(R.id.page3);
+        page1 = requireViewById(R.id.page1);
+        page2 = requireViewById(R.id.page2);
+        page3 = requireViewById(R.id.page3);
 
         /* Title bar setup */
         titleController = new TitleController();
@@ -115,32 +113,35 @@ public class MainActivity extends Activity {
         /* Create the debug text controller */
         debug = new DebugPageController();
 
-        /* Register the "env" command */
         debug.register(new Command("env", arg -> {
             Context context = getApplicationContext();
 
             /* System.getProperties */
-            Properties p = System.getProperties();
-            debug.debugf("Properties: %s", p.size());
-            for (Object propKey : p.keySet()) {
-                Spanned s = Html.fromHtml(String.format("<b>%s</b> - %s", propKey, p.get(propKey)), 0);
-                debug.debug(s);
+            for (String propKey : System.getProperties().stringPropertyNames()) {
+                String k = Html.escapeHtml(propKey);
+                String v = Html.escapeHtml(System.getProperty(propKey));
+                debug.debug(Html.fromHtml(String.format("<i>prop</i> <b>%s</b> - %s", k, v), 0));
             }
             /* System.getenv */
-            System.getenv().forEach((k,v) -> debug.debugf("$%s = %s", k, StringUtil.escape(v)));
-            /* Directories */
-            debug.debugf("%s %s", "cache", context.getCacheDir().getAbsolutePath());
-            debug.debugf("%s %s", "code cache", context.getCodeCacheDir().getAbsolutePath());
-            debug.debugf("%s %s", "data", context.getDataDir().getAbsolutePath());
-            debug.debugf("%s %s", "files", context.getFilesDir().getAbsolutePath());
-            debug.debugf("%s %s", "obb", context.getObbDir().getAbsolutePath());
-            if (context.getExternalCacheDir() != null) {
-                debug.debugf("%s %s", "external cache", context.getExternalCacheDir().getAbsolutePath());
+            for (String envKey : System.getenv().keySet()) {
+                String k = Html.escapeHtml(envKey);
+                String v = System.getenv(envKey);
+                debug.debug(Html.fromHtml(String.format("<i>env</i> <b>%s</b> = %s", k, v), 0));
             }
+            /* Directories */
+            debug.debugf("%s: %s", "cache", context.getCacheDir().getAbsolutePath());
+            debug.debugf("%s: %s", "code cache", context.getCodeCacheDir().getAbsolutePath());
+            debug.debugf("%s: %s", "data", context.getDataDir().getAbsolutePath());
+            debug.debugf("%s: %s", "files", context.getFilesDir().getAbsolutePath());
+            debug.debugf("%s: %s", "obb", context.getObbDir().getAbsolutePath());
+            if (context.getExternalCacheDir() != null) {
+                debug.debugf("%s: %s", "external cache", context.getExternalCacheDir().getAbsolutePath());
+            }
+            if (Debug.isDebuggerConnected()) {
+                debug.debug("Debugger is connected");
+            }
+        }, "display information about the environment"));
 
-        }, "Display information about the environment"));
-
-        /* Register the "!" command */
         debug.register(new Command("!", arg -> {
             debug.debugf("Executing system command \"%s\"", arg);
             try {
@@ -163,9 +164,8 @@ public class MainActivity extends Activity {
                 debug.debug("Unhandled exception: " + e.toString());
                 throw e;
             }
-        }, "Execute a system command"));
+        }, "execute a system command"));
 
-        /* Register the "id" command */
         debug.register(new Command("id", arg -> {
             debug.debugf("pid: %d, ppid: %d", Os.getpid(), Os.getppid());
             debug.debugf("uid: %d, euid: %d", Os.getuid(), Os.geteuid());
@@ -173,14 +173,11 @@ public class MainActivity extends Activity {
             debug.debugf("tid: %d", Os.gettid());
         }, "get user/group ID information"));
 
-        /* Register the "title" command */
-        debug.register(new Command("title", titleController::addMessage, "add a title message"));
+        debug.register(new Command("title", titleController::addMessage, "add new title message"));
 
-        /* Register the "html-title" command */
-        debug.register(new Command("html-title", arg -> titleController.addMessage(Html.fromHtml(arg, 0)), "add HTML title message"));
+        debug.register(new Command("html-title", arg -> titleController.addMessage(Html.fromHtml(arg, 0)), "add new HTML title message"));
 
-        /* Register the "anim" command */
-        debug.register(new Command("anim", arg -> {
+        debug.register(new Command("page-anim", arg -> {
             try {
                 int animMode = Integer.parseInt(arg);
                 switch (animMode) {
@@ -213,7 +210,6 @@ public class MainActivity extends Activity {
      * @param event The motion event to process.
      * @return True when the event is consumed, false otherwise.
      */
-    @SuppressLint("DefaultLocale")
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
         Logf.dc("Obtained final touch event %s", event.toString());
@@ -366,7 +362,7 @@ public class MainActivity extends Activity {
      */
     @SuppressWarnings("unused")
     private void showSnack(@NotNull CharSequence text) {
-        showSnack(findViewById(R.id.top), text);
+        showSnack(requireViewById(R.id.top), text);
     }
 
     /** Show a "Snack Bar" message for the given view
@@ -446,6 +442,12 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** Handle switch toggle.
+     *
+     * This method is called when a registered Switch view was changed.
+     *
+     * @param switchView Reference to the switch that was changed.
+     */
     public void onSwitchToggle(@NotNull View switchView) {
         if (!(switchView instanceof Switch)) {
             throw new RuntimeException(String.format("View %s not a Switch", switchView.toString()));
@@ -467,6 +469,13 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** Handle selecting a page animation radio button.
+     *
+     * This method is called when one of the page animation radio buttons is
+     * clicked.
+     *
+     * @param radioButton The button that was clicked.
+     */
     public void onPageAnimationSelection(@NotNull View radioButton) {
         if (!(radioButton instanceof RadioButton)) {
             throw new AssertionError("Page animation selection object must be a RadioButton; got: " + radioButton.toString());
@@ -487,7 +496,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Get the device's screen size.
+    /** Get the device's screen size in pixels.
      *
      * @return The screen size where x is width and y is height.
      */
@@ -498,6 +507,10 @@ public class MainActivity extends Activity {
         return size;
     }
 
+    /** Get the device's screen width in pixels.
+     *
+     * @return The width of the screen in pixels.
+     */
     public int getScreenWidth() {
         Point size = getScreenSize();
         return size.x;

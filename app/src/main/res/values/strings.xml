@@ -31,6 +31,5 @@
         <item><![CDATA[<font color="green">Green!</font>]]></item>
         <item><![CDATA[<font color="blue">Blue!</font>]]></item>
         <item><![CDATA[<font color="red">C</font><font color="orange">o</font><font color="yellow">l</font><font color="green">o</font><font color="blue">r</font><font color="violet">!</font>]]></item>
-        <item>This is a test message</item>
     </string-array>
 </resources>

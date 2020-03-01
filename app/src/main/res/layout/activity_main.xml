@@ -22,6 +22,7 @@
             android:clickable="false"
             android:ellipsize="none"
             android:focusable="false"
+            android:gravity="start"
             android:singleLine="true"
             android:textSize="@dimen/btnTextSize"
             android:visibility="visible"

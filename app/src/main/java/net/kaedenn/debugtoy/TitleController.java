@@ -5,10 +5,11 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.graphics.Point;
-import android.os.Debug;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.text.Spanned;
 import android.text.SpannedString;
-import android.util.TypedValue;
+import android.util.Pair;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,15 +25,12 @@ import androidx.annotation.NonNull;
 import net.kaedenn.debugtoy.util.AnimationListenerAdapter;
 import net.kaedenn.debugtoy.util.Logf;
 import net.kaedenn.debugtoy.util.Res;
-import net.kaedenn.debugtoy.util.TypedData;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings("WeakerAccess")
 class TitleController {
@@ -88,8 +86,8 @@ class TitleController {
      */
     @SuppressLint("ClickableViewAccessibility")
     public TitleController() {
-        mTitleView = MainActivity.getInstance().findViewById(R.id.titlebar);
-        mHelperView = MainActivity.getInstance().findViewById(R.id.titlebarHelper);
+        mTitleView = MainActivity.getInstance().requireViewById(R.id.titlebar);
+        mHelperView = MainActivity.getInstance().requireViewById(R.id.titlebarHelper);
         mTitleView.setOnTouchListener(this::onTitlebarTouchEvent);
         mMessageQueue = Collections.synchronizedList(new ArrayList<>());
         mInterpolator = AnimationUtils.loadInterpolator(MainActivity.getInstance(), android.R.anim.linear_interpolator);
@@ -220,6 +218,21 @@ class TitleController {
         return Math.round(getDurationCoeff() * xDistance);
     }
 
+    private Pair<Float, Float> getAnimExtrema(int width) {
+        int sw = MainActivity.getInstance().getScreenWidth();
+        float margin = sw * TEXT_MARGIN;
+        float xStart = sw + margin;
+        float xEnd = -(width + margin);
+        /*
+        if ((mTitleView.getGravity() & Gravity.CENTER_VERTICAL) != 0) {
+            xStart += width;
+            xEnd -= width;
+        }
+        Logf.dc("Animating %d from %g to %g (sw=%d, m=%g)", width, xStart, xEnd, sw, margin);
+        */
+        return new Pair<>(xStart, xEnd);
+    }
+
     /** Start the animation.
      *
      * This method obtains the next message (which can modify the queued
@@ -237,13 +250,10 @@ class TitleController {
             int width = mHelperView.getMeasuredWidth();
 
             /* Calculate offsets and the duration */
-            int screenWidth = MainActivity.getInstance().getScreenWidth();
-            float xStart = screenWidth + screenWidth * TEXT_MARGIN;
-            float xEnd = -(width + screenWidth * TEXT_MARGIN);
-            long duration = getDurationFor(Math.abs(xStart - xEnd));
-            if (mTitleView.getGravity() == Gravity.CENTER_HORIZONTAL) {
-                Logf.ic("Unimplemented CENTER_HORIZONTAL gravity");
-            }
+            Pair<Float, Float> extrema = getAnimExtrema(width);
+            float xStart = extrema.first;
+            float xEnd = extrema.second;
+            long duration = getDurationFor(xStart - xEnd);
 
             /* Ensure the text box is large enough to store the string */
             ViewGroup.LayoutParams params = mTitleView.getLayoutParams();
@@ -255,6 +265,9 @@ class TitleController {
             mAnimation.setDuration(duration);
             mAnimation.setInterpolator(mInterpolator);
             mAnimation.setAnimationListener(new AnimationListenerAdapter() {
+                public void onAnimationStart(Animation animation) {
+                    Logf.d(LOG_TAG, "Animation is starting");
+                }
                 public void onAnimationEnd(Animation animation) {
                     startAnimation();
                 }
@@ -262,22 +275,10 @@ class TitleController {
 
             /* Start the animation */
             mTitleView.post(() -> {
-                Map<String, TypedValue> debugMap = null;
-                if (Debug.isDebuggerConnected()) {
-                    debugMap = new HashMap<>();
-                    debugMap.put("screenWidth", TypedData.of(screenWidth));
-                    debugMap.put("xStart", TypedData.of(xStart));
-                    debugMap.put("xEnd", TypedData.of(xEnd));
-                    debugMap.put("duration", TypedData.of(duration));
-                    Logf.dc("Debug map created");
-                }
                 mTitleView.clearAnimation(); /* Just in case */
                 mTitleView.setTextColor(mStartColor);
                 mTitleView.setText(data);
                 mTitleView.startAnimation(mAnimation);
-                if (debugMap != null) {
-                    Logf.dc("Debug map: %d items", debugMap.size());
-                }
             });
         }
     }
