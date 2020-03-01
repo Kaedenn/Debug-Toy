@@ -38,14 +38,17 @@ import java.util.concurrent.TimeUnit;
 /** Main activity for the {@code net.kaedenn.debugtoy} application. */
 public class MainActivity extends Activity {
 
-    /* Tag used for logging */
+    /* Logging setup */
     private static final String LOG_TAG = "main";
-
-    /* Load the native particle (Page 2) library */
     static {
-        Runtime.getRuntime().loadLibrary("particle-native");
         Logf.getInstance().add(MainActivity.class, LOG_TAG);
     }
+
+    /* Native code is disabled until some actual use is found.
+    static {
+        Runtime.getRuntime().loadLibrary("particle-native");
+    }
+    */
 
     /* Provide public access to this MainActivity */
     private static WeakReference<MainActivity> mActivity;

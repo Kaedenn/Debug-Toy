@@ -21,11 +21,13 @@ android {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
     }
+    /* Disable native code entirely until some actual use is found.
     externalNativeBuild {
         cmake {
             path file('CMakeLists.txt')
         }
     }
+    */
 }
 
 dependencies {
