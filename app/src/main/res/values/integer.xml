@@ -10,4 +10,11 @@
     <integer name="pDyRange">0</integer>
 
     <integer name="tbTouchAnimDuration">500</integer>
+
+    <integer-array name="tbDiscoColorValues">
+        <item>0xFFFF0000</item>
+        <item>0xFF00FF00</item>
+        <item>0xFF0000FF</item>
+        <item>0xFFFF0000</item>
+    </integer-array>
 </resources>

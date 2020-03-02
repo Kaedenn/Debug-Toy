@@ -9,6 +9,10 @@ import android.util.TypedValue;
 
 import net.kaedenn.debugtoy.MainActivity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static java.lang.Float.NaN;
 
 /** Helper class to simplify accessing resources from anywhere.
@@ -90,6 +94,39 @@ public final class Res {
         return MainActivity.getInstance().getResources().getIntArray(id);
     }
 
+    /** Wrapper of {@code getIntArray}, returning an array of {@code Integer}s.
+     *
+     * This method is identical to the {@code getIntArray} method, but returns
+     * an array of {@code Integer} objects rather than native {@code int}s.
+     *
+     * @param id The {@code <int-array>} resource ID.
+     * @return The resource array.
+     */
+    public static Integer[] getIntegerArray(int id) {
+        int[] res = getIntArray(id);
+        Integer[] iRes = new Integer[res.length];
+        for (int i = 0; i < res.length; ++i) {
+            iRes[i] = res[i];
+        }
+        return iRes;
+    }
+
+    /** Wrapper of {@code getIntArray}, returning a {@code List} of {@code Integer}s.
+     *
+     * This method is identical to the {@code getIntegerArray} method, but
+     * returns a {@code List} of {@code Integer}s.
+     *
+     * @param id The {@code <int-array>} resource ID.
+     * @return The resource array as a {@code List<Integer>}.
+     */
+    public static List<Integer> getIntegerList(int id) {
+        return Arrays.asList(getIntegerArray(id));
+    }
+
+    public static ArrayList<Integer> getIntegerArrayList(int id) {
+        return new ArrayList<>(getIntegerList(id));
+    }
+
     /** Direct wrapper */
     public static int getInteger(int id) {
         return MainActivity.getInstance().getResources().getInteger(id);
@@ -130,6 +167,19 @@ public final class Res {
         return MainActivity.getInstance().getResources().getStringArray(id);
     }
 
+    /** Wrapper of {@code getStringArray}, returning a {@code List}.
+     *
+     * @param id The {@code <string-array>} resource ID.
+     * @return The resource array as a {@code List} of {@code String}s.
+     */
+    public static List<String> getStringList(int id) {
+        return Arrays.asList(getStringArray(id));
+    }
+
+    public static ArrayList<String> getStringArrayList(int id) {
+        return new ArrayList<>(getStringList(id));
+    }
+
     /** Direct wrapper */
     public static CharSequence getText(int id) {
         return MainActivity.getInstance().getResources().getText(id);
@@ -143,6 +193,19 @@ public final class Res {
     /** Direct wrapper */
     public static CharSequence[] getTextArray(int id) {
         return MainActivity.getInstance().getResources().getTextArray(id);
+    }
+
+    /** Wrapper of {@code getTextArray}, returning a {@code List}.
+     *
+     * @param id The {@code <array>} resource ID.
+     * @return The resource array as a {@code List} of {@code CharSequence}s.
+     */
+    public static List<CharSequence> getTextList(int id) {
+        return Arrays.asList(getTextArray(id));
+    }
+
+    public static ArrayList<CharSequence> getTextArrayList(int id) {
+        return new ArrayList<>(getTextList(id));
     }
 
     /** Direct wrapper */

@@ -1,6 +1,12 @@
 <resources>
+    <!-- Text size used by the titlebar -->
+    <dimen name="titleTextSize">14sp</dimen>
+
+    <!-- Text size used by the debug and command text views -->
     <dimen name="debugTextSize">12sp</dimen>
-    <dimen name="btnHeight">42dp</dimen>
+
+    <!-- Various dimension constants to define how the buttons look -->
+    <dimen name="btnShortHeight">42dp</dimen>
     <dimen name="btnTextSize">14sp</dimen>
     <dimen name="btnRadius">20dp</dimen>
     <dimen name="btnStroke">4dp</dimen>

@@ -4,28 +4,33 @@ import android.graphics.Color;
 import android.graphics.Point;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class RandUtil extends Random {
-    private static RandUtil self;
+public class Rand extends Random {
+    private static Rand self;
 
-    public static RandUtil getInstance() {
-        if (self == null) self = new RandUtil();
+    public static Rand getInstance() {
+        if (self == null) self = new Rand();
         return self;
     }
 
-    public RandUtil() {
+    public Rand() {
         this(Date.from(Instant.now()).getTime());
     }
 
-    public RandUtil(long seed) {
+    public Rand(long seed) {
         super(seed);
     }
 
     public <T> T choice(T[] choices) {
         return choices[nextInt(choices.length)];
+    }
+
+    public <T> T choice(ArrayList<T> choices) {
+       return choices.get(nextInt(choices.size()));
     }
 
     public int range(int min, int max) {

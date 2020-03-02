@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<android.widget.RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/page3"
     android:layout_width="match_parent"
@@ -18,25 +18,6 @@
             android:visibility="visible">
 
 
-            <Switch
-                android:id="@+id/switchDebug"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:nextFocusDown="@id/switchAnimation"
-                android:onClick="onSwitchToggle"
-                android:text="@string/opt_debug_name" />
-
-            <Switch
-                android:id="@+id/switchAnimation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:nextFocusUp="@id/switchDebug"
-                android:nextFocusDown="@id/radioAnimNone"
-                android:onClick="onSwitchToggle"
-                android:text="@string/switchAnimation" />
-
             <RadioGroup
                 android:id="@+id/pageAnimationSelection"
                 android:layout_width="match_parent"
@@ -47,9 +28,8 @@
                     android:id="@+id/radioAnimNone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:nextFocusUp="@id/switchAnimation"
                     android:nextFocusDown="@id/radioAnimFade"
-                    android:onClick="onPageAnimationSelection"
+                    android:onClick="onRadioButtonChange"
                     android:text="@string/radioAnim0" />
 
                 <RadioButton
@@ -58,18 +38,35 @@
                     android:layout_height="wrap_content"
                     android:nextFocusUp="@id/radioAnimNone"
                     android:nextFocusDown="@id/radioAnimSlide"
-                    android:onClick="onPageAnimationSelection"
+                    android:onClick="onRadioButtonChange"
                     android:text="@string/radioAnim1" />
 
                 <RadioButton
                     android:id="@+id/radioAnimSlide"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:onClick="onPageAnimationSelection"
+                    android:nextFocusUp="@id/radioAnimFade"
+                    android:nextFocusDown="@id/switchDebug"
+                    android:onClick="onRadioButtonChange"
                     android:text="@string/radioAnim2" />
+
             </RadioGroup>
 
+            <CheckBox
+                android:id="@+id/switchDebug"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nextFocusUp="@id/radioAnimSlide"
+                android:checked="true"
+                android:onClick="onButtonToggle"
+                android:text="@string/switchDebug" />
 
+            <!--
+            <NumberPicker
+                android:id="@+id/titlebarSpeed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />-->
         </LinearLayout>
     </ScrollView>
 

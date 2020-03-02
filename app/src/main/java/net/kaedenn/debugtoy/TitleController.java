@@ -4,9 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
-import android.graphics.Point;
-import android.graphics.PointF;
-import android.graphics.Rect;
 import android.text.Spanned;
 import android.text.SpannedString;
 import android.util.Pair;
@@ -23,6 +20,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import net.kaedenn.debugtoy.util.AnimationListenerAdapter;
+import net.kaedenn.debugtoy.util.Functional;
 import net.kaedenn.debugtoy.util.Logf;
 import net.kaedenn.debugtoy.util.Res;
 
@@ -39,16 +37,17 @@ class TitleController {
         Logf.getInstance().add(TitleController.class, LOG_TAG);
     }
 
-    /* Extra margin to add to the scroll ending x coordinate (multiplied by the
-     * current screen width) */
+    /* Margin to add to the translation start and/or end offsets */
     private static final float TEXT_MARGIN = 0.1f;
 
     /* Default duration coefficient */
     private static final float DEFAULT_DURATION_COEFFICIENT = 3.5f;
 
-    /* Values used for interactive titlebar animations */
-    private static final int[] TITLE_ANIM_COLORS = {0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFF0000};
-    private static final float[] TITLE_ANIM_SCALE_VALUES = {1f, .8f, 1.2f, 1f};
+    /* "Disco" color animation field and values */
+    private static final String ANIM_COLOR_FIELD = "TextColor";
+
+    /* Scale animation field and values */
+    private static final String ANIM_SCALE_FIELD = "TextScaleX";
 
     /* View that the user will see */
     @NonNull
@@ -78,6 +77,12 @@ class TitleController {
     /* Color to apply by default at the start of every message */
     private int mStartColor;
 
+    /* Color keyframes used by the color animation */
+    private int[] mAnimColorValues;
+
+    /* Scale keyframes used by the scale animation */
+    private float[] mAnimScaleValues;
+
     /** Construct the controller class.
      *
      * Default interpolator: {@code android.R.anim.linear_interpolator}.
@@ -94,12 +99,8 @@ class TitleController {
         mDurationCoeff = DEFAULT_DURATION_COEFFICIENT;
         mStartColor = mTitleView.getCurrentTextColor();
 
-        /* Ensure the title view and helper view are truly identical */
-        if (mTitleView.getGravity() != mHelperView.getGravity()) {
-            Logf.ec("mHelperView gravity %d differs from mTitleView gravity %d", mHelperView.getGravity(), mTitleView.getGravity());
-            mHelperView.setGravity(mTitleView.getGravity());
-        }
-        Logf.dc("TitleController constructed");
+        mAnimColorValues = Res.getIntArray(R.array.tbDiscoColorValues);
+        mAnimScaleValues = Functional.toFloatArray(Res.getTextArray(R.array.tbDiscoScaleValues));
     }
 
     /** Set the default text color.
@@ -114,6 +115,28 @@ class TitleController {
         mStartColor = c;
     }
 
+    /** Construct and return the "disco" color animator */
+    private ObjectAnimator makeColorAnim() {
+        ObjectAnimator colorAnim = ObjectAnimator.ofArgb(mTitleView, ANIM_COLOR_FIELD, mAnimColorValues);
+        colorAnim.addListener(new AnimatorListenerAdapter() {
+            public void onAnimationEnd(Animator animation) {
+                mTitleView.setTextColor(mStartColor);
+            }
+        });
+        /* TODO: Stop the animation once the text scrolls off-screen
+        colorAnim.setRepeatCount(ValueAnimator.INFINITE);
+        */
+        colorAnim.setDuration(Res.getInteger(R.integer.tbTouchAnimDuration));
+        return colorAnim;
+    }
+
+    /** Construct and return the scale animator */
+    private ObjectAnimator makeScaleAnim() {
+        ObjectAnimator scaleAnim = ObjectAnimator.ofFloat(mTitleView, ANIM_SCALE_FIELD, mAnimScaleValues);
+        scaleAnim.setDuration(Res.getInteger(R.integer.tbTouchAnimDuration));
+        return scaleAnim;
+    }
+
     /** Process touch events on the titlebar
      *
      * @param v The titlebar view (ignored; {@code mTitleView} is used)
@@ -122,17 +145,8 @@ class TitleController {
      */
     private boolean onTitlebarTouchEvent(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            ObjectAnimator colorAnim = ObjectAnimator.ofArgb(mTitleView, "TextColor", TITLE_ANIM_COLORS);
-            colorAnim.addListener(new AnimatorListenerAdapter() {
-                public void onAnimationEnd(Animator animation) {
-                    mTitleView.setTextColor(mStartColor);
-                }
-            });
-            colorAnim.setDuration(Res.getInteger(R.integer.tbTouchAnimDuration));
-            colorAnim.start();
-            ObjectAnimator.ofFloat(mTitleView, "TextScaleX", TITLE_ANIM_SCALE_VALUES)
-                    .setDuration(Res.getInteger(R.integer.tbTouchAnimDuration))
-                    .start();
+            makeColorAnim().start();
+            makeScaleAnim().start();
             return true;
         }
         return false;
@@ -166,9 +180,11 @@ class TitleController {
      * queued, which should result in the animation terminating.
      */
     private Spanned getNextMessage() {
-        Logf.vc("getNextMessage: queue has %d items", mMessageQueue.size());
         if (!mMessageQueue.isEmpty()) {
+            Logf.vc("getNextMessage: queue has %d items", mMessageQueue.size());
             mMessage = mMessageQueue.remove(0);
+        } else {
+            Logf.vc("getNextMessage: queue is empty; returning previous message");
         }
         return mMessage;
     }
@@ -218,28 +234,54 @@ class TitleController {
         return Math.round(getDurationCoeff() * xDistance);
     }
 
+    private boolean isViewCentered() {
+        return (mTitleView.getGravity() & (~Gravity.START | ~Gravity.TOP | Gravity.CENTER)) != 0;
+    }
+
+    /** Get the xStart and xEnd coordinates for the given width.
+     *
+     * The calculations will differ if the {@code mTitleView} has centered
+     * gravity, as (for some unknown reason) that changes what requires the 10%
+     * margin.
+     *
+     * If the view is centered, the start coordinate has the margin applied to
+     * half of the width and the end coordinate has the margin applied to the
+     * width.
+     *
+     * Otherwise, both the start and end coordinates have the margin applied to
+     * the screen's width.
+     *
+     * @param width The width of the message in pixels.
+     * @return A pair of {@code Float}s {@code xStart} and {@code xEnd}.
+     */
     private Pair<Float, Float> getAnimExtrema(int width) {
         int sw = MainActivity.getInstance().getScreenWidth();
-        float margin = sw * TEXT_MARGIN;
-        float xStart = sw + margin;
-        float xEnd = -(width + margin);
-        /*
-        if ((mTitleView.getGravity() & Gravity.CENTER_VERTICAL) != 0) {
-            xStart += width;
-            xEnd -= width;
+        float xStart, xEnd;
+        if (isViewCentered()) {
+            xStart = sw + width/2 * TEXT_MARGIN;
+            xEnd = -(width + width * TEXT_MARGIN);
+            Logf.vc("Animating width=%d from x1=%g to x2=%g (sw=%d, center=true)", width, xStart, xEnd, sw);
+        } else {
+            xStart = sw + sw * TEXT_MARGIN;
+            xEnd = -(width + sw * TEXT_MARGIN);
+            Logf.vc("Animating width=%d from x1=%g to x2=%g (sw=%d, center=false)", width, xStart, xEnd, sw);
         }
-        Logf.dc("Animating %d from %g to %g (sw=%d, m=%g)", width, xStart, xEnd, sw, margin);
-        */
         return new Pair<>(xStart, xEnd);
     }
 
-    /** Start the animation.
+    /** Start the next animation.
      *
      * This method obtains the next message (which can modify the queued
      * messages), calculates animation information (starting and ending X
      * coordinates, duration), resizes the view to contain the entire message,
      * constructs the animation object, sets the view's text and formatting
      * information, and then finally starts the animation.
+     *
+     * Note that the animation does not repeat, even though it seems like it
+     * should. Each message requires different animation parameters and updating
+     * the parameters of a running animation doesn't seem to be possible.
+     * Therefore, the animation is recreated entirely once the previous one
+     * completes.
      */
     private void startAnimation() {
         Spanned data = getNextMessage();
@@ -257,7 +299,7 @@ class TitleController {
 
             /* Ensure the text box is large enough to store the string */
             ViewGroup.LayoutParams params = mTitleView.getLayoutParams();
-            params.width = Math.round(Math.abs(xStart - xEnd));
+            params.width = Math.round(width + width * TEXT_MARGIN);
             mTitleView.setLayoutParams(params);
 
             /* Construct the animation */
@@ -265,9 +307,6 @@ class TitleController {
             mAnimation.setDuration(duration);
             mAnimation.setInterpolator(mInterpolator);
             mAnimation.setAnimationListener(new AnimationListenerAdapter() {
-                public void onAnimationStart(Animation animation) {
-                    Logf.d(LOG_TAG, "Animation is starting");
-                }
                 public void onAnimationEnd(Animation animation) {
                     startAnimation();
                 }

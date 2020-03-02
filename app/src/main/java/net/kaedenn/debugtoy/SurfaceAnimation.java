@@ -9,7 +9,7 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import net.kaedenn.debugtoy.util.Logf;
-import net.kaedenn.debugtoy.util.RandUtil;
+import net.kaedenn.debugtoy.util.Rand;
 import net.kaedenn.debugtoy.util.Res;
 
 import org.jetbrains.annotations.NotNull;
@@ -63,9 +63,9 @@ class SurfaceAnimation extends TimerTask {
     }
 
     private void resetParticle(@NotNull Particle p) {
-        p.x = RandUtil.getRange(mSurfaceRect.left, mSurfaceRect.right);
+        p.x = Rand.getRange(mSurfaceRect.left, mSurfaceRect.right);
         p.y = 0;
-        p.dx = RandUtil.getRange(-PARTICLE_DX_RANGE/2f, PARTICLE_DX_RANGE/2f);
+        p.dx = Rand.getRange(-PARTICLE_DX_RANGE/2f, PARTICLE_DX_RANGE/2f);
         p.dy = 0;
     }
 

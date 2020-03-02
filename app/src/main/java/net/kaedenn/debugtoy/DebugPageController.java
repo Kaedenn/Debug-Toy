@@ -3,7 +3,9 @@ package net.kaedenn.debugtoy;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.function.Consumer;
 
+import android.annotation.SuppressLint;
 import android.text.Spanned;
 import android.view.View;
 import android.widget.ScrollView;
@@ -23,7 +25,8 @@ import org.jetbrains.annotations.NotNull;
  * If the help text is omitted, then the default resource string
  * {@code cmd_help_default} is used.
  */
-final class DebugPageController {
+@SuppressWarnings("WeakerAccess")
+public final class DebugPageController {
     private static final String LOG_TAG = "debug-controller";
     static {
         Logf.getInstance().add(DebugPageController.class, LOG_TAG);
@@ -31,20 +34,32 @@ final class DebugPageController {
 
     private final HashMap<String, Command> mCommands = new HashMap<>();
 
-    DebugPageController() {
+    public DebugPageController() {
         Logf.ic("DebugPageController created");
     }
 
     /** Register a named command.
      *
-     * The help text defaults to the {@code cmd_help_default} resource string.
-     *
      * @param action Command to execute
      */
-    void register(@NotNull Command action) {
+    public void register(@NotNull Command action) {
         String cmd = action.getCommand();
         mCommands.put(cmd, action);
         Logf.dc("Registered command %s (%s)", cmd, action);
+    }
+
+    /** Register a named command.
+     *
+     * This is a convenience function to simplify the following code:
+     * {@code register(new Command(cmd, func, help))}
+     * and replace it with the simpler {@code register(cmd, func, help)}.
+     *
+     * @param command The command string.
+     * @param function The command function.
+     * @param help The command's help text (or {@code null} for no help text).
+     */
+    public void register(@NonNull String command, @NotNull Consumer<String> function, String help) {
+        register(new Command(command, function, help));
     }
 
     /** Removes a command entirely.
@@ -52,7 +67,7 @@ final class DebugPageController {
      * @param cmd The command to remove
      */
     @SuppressWarnings("unused")
-    void unregister(String cmd) {
+    public void unregister(String cmd) {
         mCommands.remove(cmd);
     }
 
@@ -61,7 +76,7 @@ final class DebugPageController {
      * @return A collection of mCommands, without the default command.
      */
     @NonNull
-    Collection<String> getCommands() {
+    public Collection<String> getCommands() {
         return mCommands.keySet();
     }
 
@@ -75,7 +90,7 @@ final class DebugPageController {
      *
      * @param command The command string to execute
      */
-    void execute(String command) {
+    public void execute(String command) {
         if (command == null || command.length() == 0) {
             /* Prevent meaningless execution */
             return;
@@ -105,7 +120,7 @@ final class DebugPageController {
      * @param cmd The named command to examine
      * @return true if the command is bound, false otherwise
      */
-    boolean isRegistered(String cmd) {
+    public boolean isRegistered(String cmd) {
         if (cmd.equals("help")) {
             return true;
         } else if (cmd.contains(" ")) {
@@ -120,7 +135,7 @@ final class DebugPageController {
      *
      * @return Current content of the debugActionText widget, as a string
      */
-    String getDebugCommand() {
+    public String getDebugCommand() {
         TextView t = MainActivity.getInstance().findViewById(R.id.debugCommand);
         return t.getText().toString();
     }
@@ -130,7 +145,7 @@ final class DebugPageController {
      * This function clears the small input box's content. This is called
      * automatically when a command is submitted.
      */
-    void clearDebugCommand() {
+    public void clearDebugCommand() {
         TextView t = MainActivity.getInstance().findViewById(R.id.debugCommand);
         t.setText("");
     }
@@ -150,7 +165,7 @@ final class DebugPageController {
      *
      * @param text The text to append
      */
-    void debug(CharSequence text) {
+    public void debug(CharSequence text) {
         TextView t = MainActivity.getInstance().findViewById(R.id.debugText);
         t.append(text);
         t.append("\n");
@@ -162,7 +177,7 @@ final class DebugPageController {
      * @param format The format string
      * @param arguments The arguments to pass with the format string
      */
-    void debugf(CharSequence format, Object... arguments) {
+    public void debug(CharSequence format, Object... arguments) {
         debug(String.format(format.toString(), arguments));
     }
 
@@ -170,7 +185,7 @@ final class DebugPageController {
      *
      * This clears the main debug text box of its content.
      */
-    void clearDebug() {
+    public void clearDebug() {
         TextView t = MainActivity.getInstance().findViewById(R.id.debugText);
         t.setText("");
     }

@@ -24,7 +24,7 @@
             android:focusable="false"
             android:gravity="start"
             android:singleLine="true"
-            android:textSize="@dimen/btnTextSize"
+            android:textSize="@dimen/titleTextSize"
             android:visibility="visible"
             tools:text="Scrolling title text" />
 
@@ -36,7 +36,7 @@
             android:ellipsize="none"
             android:focusable="false"
             android:singleLine="true"
-            android:textSize="@dimen/btnTextSize"
+            android:textSize="@dimen/titleTextSize"
             android:visibility="gone"
             tools:text="Helper for titlebar formatting" />
 
@@ -58,7 +58,8 @@
                 layout="@layout/p2_animation_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="gone" />
+                android:visibility="gone"
+                tools:visibility="gone" />
 
             <include
                 layout="@layout/p3_options_layout"
@@ -82,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@drawable/button_main"
-                android:minHeight="@dimen/btnHeight"
+                android:minHeight="@dimen/btnShortHeight"
                 android:onClick="onButtonClick"
                 android:text="@string/page1_button"
                 android:textColor="@color/colorButtonText"
@@ -95,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@drawable/button_main"
-                android:minHeight="@dimen/btnHeight"
+                android:minHeight="@dimen/btnShortHeight"
                 android:onClick="onButtonClick"
                 android:text="@string/page2_button"
                 android:textColor="@color/colorButtonText"
@@ -108,7 +109,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@drawable/button_main"
-                android:minHeight="@dimen/btnHeight"
+                android:minHeight="@dimen/btnShortHeight"
                 android:onClick="onButtonClick"
                 android:text="@string/page3_button"
                 android:textColor="@color/colorButtonText"

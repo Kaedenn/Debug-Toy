@@ -22,8 +22,10 @@ import androidx.annotation.NonNull;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import net.kaedenn.debugtoy.annotation.Callback;
 import net.kaedenn.debugtoy.util.Logf;
 import net.kaedenn.debugtoy.util.Res;
+import net.kaedenn.debugtoy.util.Str;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -84,7 +86,7 @@ public class MainActivity extends Activity {
      * Page 2: Construct the surface controller.
      * Page 3: Nothing yet.
      *
-     * @param savedInstanceState Saved application information
+     * @param savedInstanceState Saved application information.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,37 +115,33 @@ public class MainActivity extends Activity {
         /* Create the debug text controller */
         debug = new DebugPageController();
 
-        debug.register(new Command("env", arg -> {
+        debug.register("env", arg -> {
             Context context = getApplicationContext();
 
             /* System.getProperties */
             for (String propKey : System.getProperties().stringPropertyNames()) {
-                String k = Html.escapeHtml(propKey);
-                String v = Html.escapeHtml(System.getProperty(propKey));
-                debug.debug(Html.fromHtml(String.format("<i>prop</i> <b>%s</b> - %s", k, v), 0));
+                debug.debug(Str.kvToHtml("prop", propKey, System.getProperty(propKey)));
             }
             /* System.getenv */
             for (String envKey : System.getenv().keySet()) {
-                String k = Html.escapeHtml(envKey);
-                String v = System.getenv(envKey);
-                debug.debug(Html.fromHtml(String.format("<i>env</i> <b>%s</b> = %s", k, v), 0));
+                debug.debug(Str.kvToHtml("env", envKey, System.getenv(envKey)));
             }
             /* Directories */
-            debug.debugf("%s: %s", "cache", context.getCacheDir().getAbsolutePath());
-            debug.debugf("%s: %s", "code cache", context.getCodeCacheDir().getAbsolutePath());
-            debug.debugf("%s: %s", "data", context.getDataDir().getAbsolutePath());
-            debug.debugf("%s: %s", "files", context.getFilesDir().getAbsolutePath());
-            debug.debugf("%s: %s", "obb", context.getObbDir().getAbsolutePath());
+            debug.debug(Str.kvToHtml("cache", context.getCacheDir().getAbsolutePath()));
+            debug.debug(Str.kvToHtml("code cache", context.getCodeCacheDir().getAbsolutePath()));
+            debug.debug(Str.kvToHtml("data", context.getDataDir().getAbsolutePath()));
+            debug.debug(Str.kvToHtml("files", context.getFilesDir().getAbsolutePath()));
+            debug.debug(Str.kvToHtml("obb", context.getObbDir().getAbsolutePath()));
             if (context.getExternalCacheDir() != null) {
-                debug.debugf("%s: %s", "external cache", context.getExternalCacheDir().getAbsolutePath());
+                debug.debug(Str.kvToHtml("external cache", context.getExternalCacheDir().getAbsolutePath()));
             }
             if (Debug.isDebuggerConnected()) {
                 debug.debug("Debugger is connected");
             }
-        }, "display information about the environment"));
+        }, "display information about the environment");
 
-        debug.register(new Command("!", arg -> {
-            debug.debugf("Executing system command \"%s\"", arg);
+        debug.register("!", arg -> {
+            debug.debug("Executing system command \"%s\"", arg);
             try {
                 Process p = Runtime.getRuntime().exec(arg);
                 BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -164,38 +162,31 @@ public class MainActivity extends Activity {
                 debug.debug("Unhandled exception: " + e.toString());
                 throw e;
             }
-        }, "execute a system command"));
+        }, "execute a system command");
 
-        debug.register(new Command("id", arg -> {
-            debug.debugf("pid: %d, ppid: %d", Os.getpid(), Os.getppid());
-            debug.debugf("uid: %d, euid: %d", Os.getuid(), Os.geteuid());
-            debug.debugf("gid: %d, egid: %d", Os.getgid(), Os.getegid());
-            debug.debugf("tid: %d", Os.gettid());
-        }, "get user/group ID information"));
+        debug.register("id", arg -> {
+            debug.debug("pid: %d, ppid: %d", Os.getpid(), Os.getppid());
+            debug.debug("uid: %d, euid: %d", Os.getuid(), Os.geteuid());
+            debug.debug("gid: %d, egid: %d", Os.getgid(), Os.getegid());
+            debug.debug("tid: %d", Os.gettid());
+        }, "get user/group ID information");
 
-        debug.register(new Command("title", titleController::addMessage, "add new title message"));
+        debug.register("title", titleController::addMessage, "add new title message");
 
-        debug.register(new Command("html-title", arg -> titleController.addMessage(Html.fromHtml(arg, 0)), "add new HTML title message"));
+        debug.register("html-title", arg -> titleController.addMessage(Html.fromHtml(arg, 0)), "add new HTML title message");
 
-        debug.register(new Command("page-anim", arg -> {
-            try {
-                int animMode = Integer.parseInt(arg);
-                switch (animMode) {
-                    case PAGE_NO_ANIMATION:
-                    case PAGE_FADE_ANIMATION:
-                    case PAGE_SLIDE_ANIMATION:
-                        mPageAnimationType = animMode;
-                        debug.debugf("Set animation type to %d", animMode);
-                        break;
-                    default:
-                        debug.debugf("Invalid animation index %d", animMode);
-                        break;
-                }
+        debug.register("page-anim", arg -> {
+            Integer animMode = Str.tryParseInteger(arg);
+            if (animMode == null) {
+                debug.debug("Failed to parse argument \"%s\" as an integer", arg);
+            } else if (animMode == PAGE_NO_ANIMATION || animMode == PAGE_FADE_ANIMATION || animMode == PAGE_SLIDE_ANIMATION) {
+                mPageAnimationType = animMode;
+                toast("Set page animation type to mode %d", animMode);
+            } else {
+                debug.debug("Invalid animation index %d", animMode);
+                toast("Invalid animation type %d", animMode);
             }
-            catch (NumberFormatException e) {
-                debug.debugf("Failed to parse argument \"%s\" as a number: %s", arg, e.toString());
-            }
-        }, "change the page animation type"));
+        }, "change the page animation type");
 
         /* Begin setup for page 2 (disabled)
         surfaceController = new SurfacePageController();
@@ -252,7 +243,7 @@ public class MainActivity extends Activity {
      * The other pages will be set to GONE. No checking is done to ensure that
      * {@param page} is actually one of the main pages.
      *
-     * @param page The view to show
+     * @param page The view to show.
      */
     private void setPage(@NotNull View page) {
         page1.setVisibility(View.GONE);
@@ -358,41 +349,37 @@ public class MainActivity extends Activity {
      *
      * The "Snack Bar" uses the {@code R.id.top} (top-level) view.
      *
-     * @param text The text to show
+     * @param text The text to show.
      */
-    @SuppressWarnings("unused")
     private void showSnack(@NotNull CharSequence text) {
         showSnack(requireViewById(R.id.top), text);
     }
 
     /** Show a "Snack Bar" message for the given view
      *
-     * @param view The view to pass to {@link Snackbar#make}
-     * @param text The text to show
+     * @param view The view to pass to {@link Snackbar#make}.
+     * @param text The text to show.
      */
-    @SuppressWarnings("unused")
     private void showSnack(@NotNull View view, @NotNull CharSequence text) {
         Snackbar.make(view, text, Snackbar.LENGTH_LONG).setAction("Action", null).show();
     }
 
     /** Show a toast message with a short duration.
      *
-     * @param text The toast message to show
+     * @param text The toast message to show.
      * @see Toast
      */
-    @SuppressWarnings("unused")
-    private void shortToast(String text) {
+    private void toast(String text) {
         Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
     }
 
-    /** Show a toast message with a long duration.
+    /** Show a formatted toast message with a short duration.
      *
-     * @param text The toast message to show
-     * @see Toast
+     * @param format The format string for the toast message.
+     * @param args The format arguments.
      */
-    @SuppressWarnings("unused")
-    private void longToast(String text) {
-        Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
+    private void toast(String format, Object... args) {
+        toast(String.format(format, args));
     }
 
     /** Handle button clicks.
@@ -403,6 +390,7 @@ public class MainActivity extends Activity {
      *
      * @param button Reference to the button clicked.
      */
+    @Callback
     public void onButtonClick(@NotNull View button) {
         String cmd = debug.getDebugCommand();
         switch (button.getId()) {
@@ -421,8 +409,7 @@ public class MainActivity extends Activity {
                 if (debug.isRegistered(cmd)) {
                     debug.execute(cmd);
                 } else {
-                    String err_f = Res.getString(R.string.err_no_cmd_f);
-                    showSnack(String.format(err_f, cmd));
+                    showSnack(String.format("Failed to execute command \"%s\": no such command", cmd));
                 }
                 break;
             case R.id.btClear:
@@ -436,8 +423,7 @@ public class MainActivity extends Activity {
             /* Page 3 */
             /* Default */
             default:
-                String err_f = Res.getString(R.string.err_invalid_button_f);
-                showSnack(String.format(err_f, button.getId()));
+                showSnack(String.format("Unknown button with ID %d", button.getId()));
                 break;
         }
     }
@@ -448,24 +434,17 @@ public class MainActivity extends Activity {
      *
      * @param switchView Reference to the switch that was changed.
      */
-    public void onSwitchToggle(@NotNull View switchView) {
+    @Callback
+    public void onButtonToggle(@NotNull View switchView) {
         if (!(switchView instanceof Switch)) {
             throw new RuntimeException(String.format("View %s not a Switch", switchView.toString()));
         }
         boolean isOn = ((Switch)switchView).isChecked();
-        switch (switchView.getId()) {
-            case R.id.switchDebug:
-                debug.debug("Debug toggle switch is " + (isOn ? "on" : "off"));
-                shortToast("Debug toggle switch is " + (isOn ? "on" : "off"));
-                break;
-            case R.id.switchAnimation:
-                debug.debug("Animation toggle switch is " + (isOn ? "on" : "off"));
-                shortToast("Animation toggle switch is " + (isOn ? "on" : "off"));
-                break;
-            default:
-                String err_f = Res.getString(R.string.err_invalid_button_f);
-                showSnack(String.format(err_f, switchView.getId()));
-                break;
+        if (switchView.getId() == R.id.switchDebug) {
+            debug.debug("Debug toggle switch is " + (isOn ? "on" : "off"));
+            toast("Debug toggle switch is " + (isOn ? "on" : "off"));
+        } else {
+            showSnack(String.format("Unknown button with ID %d", switchView.getId()));
         }
     }
 
@@ -476,7 +455,8 @@ public class MainActivity extends Activity {
      *
      * @param radioButton The button that was clicked.
      */
-    public void onPageAnimationSelection(@NotNull View radioButton) {
+    @Callback
+    public void onRadioButtonChange(@NotNull View radioButton) {
         if (!(radioButton instanceof RadioButton)) {
             throw new AssertionError("Page animation selection object must be a RadioButton; got: " + radioButton.toString());
         }
