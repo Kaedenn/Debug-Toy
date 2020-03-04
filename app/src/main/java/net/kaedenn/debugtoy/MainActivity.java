@@ -7,6 +7,8 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Debug;
 import android.system.Os;
@@ -14,6 +16,7 @@ import android.text.Html;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -58,13 +61,13 @@ public class MainActivity extends Activity {
     }
 
     /* Controller for the title bar's text and scrolling effect */
-    private TitleController titleController = null;
+    private TitleController mTitleController = null;
 
     /* References to each page (and the current page) */
     private View page1 = null;
     private View page2 = null;
     private View page3 = null;
-    private View currentPage = null;
+    private View mCurrentPage = null;
 
     /* Types of navigation animation for switching the active page */
     private static final int PAGE_NO_ANIMATION = 0;
@@ -74,10 +77,6 @@ public class MainActivity extends Activity {
 
     /* Controller for the first page. Public for other pages to use */
     public DebugPageController debug = null;
-
-    /* Controller for the second page (disabled)
-    private SurfacePageController surfaceController = null;
-     */
 
     /** Create the activity.
      *
@@ -99,13 +98,16 @@ public class MainActivity extends Activity {
         page3 = requireViewById(R.id.page3);
 
         /* Title bar setup */
-        titleController = new TitleController();
+        mTitleController = new TitleController();
         for (String s : getResources().getStringArray(R.array.title_messages)) {
-            titleController.addMessage(Html.fromHtml(s, 0));
+            mTitleController.addMessage(Html.fromHtml(s, 0));
         }
 
         /* Select page1 directly */
-        setPage(page1);
+        page1.setVisibility(View.VISIBLE);
+        page2.setVisibility(View.GONE);
+        page3.setVisibility(View.GONE);
+        mCurrentPage = page1;
 
         /* TODO: Allow swiping between pages and remove the page buttons entirely */
         /* https://github.com/codepath/android_guides/wiki/Gestures-and-Touch-Events */
@@ -171,9 +173,9 @@ public class MainActivity extends Activity {
             debug.debug("tid: %d", Os.gettid());
         }, "get user/group ID information");
 
-        debug.register("title", titleController::addMessage, "add new title message");
+        debug.register("title", mTitleController::addMessage, "add new title message");
 
-        debug.register("html-title", arg -> titleController.addMessage(Html.fromHtml(arg, 0)), "add new HTML title message");
+        debug.register("html-title", arg -> mTitleController.addMessage(Html.fromHtml(arg, 0)), "add new HTML title message");
 
         debug.register("page-anim", arg -> {
             Integer animMode = Str.tryParseInteger(arg);
@@ -188,9 +190,7 @@ public class MainActivity extends Activity {
             }
         }, "change the page animation type");
 
-        /* Begin setup for page 2 (disabled)
-        surfaceController = new SurfacePageController();
-         */
+        /* Begin setup for page 2 */
 
         /* Begin setup for page 3 */
 
@@ -203,54 +203,51 @@ public class MainActivity extends Activity {
      */
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
+        /* Disabled for now.
         Logf.dc("Obtained final touch event %s", event.toString());
         int action = event.getActionMasked();
         switch (action) {
             case (MotionEvent.ACTION_DOWN) :
                 Logf.dc("Action was DOWN");
-                return true;
+                break;
             case (MotionEvent.ACTION_MOVE) :
                 Logf.dc("Action was MOVE");
-                return true;
+                break;
             case (MotionEvent.ACTION_UP) :
                 Logf.dc("Action was UP");
-                return true;
+                break;
             case (MotionEvent.ACTION_CANCEL) :
                 Logf.dc("Action was CANCEL");
-                return true;
+                break;
             case (MotionEvent.ACTION_OUTSIDE) :
                 Logf.dc("Movement occurred outside of screen bounds");
-                return true;
+                break;
             default:
                 Logf.ic("Movement had an unknown action %d", action);
-                return super.onTouchEvent(event);
+                break;
         }
+        */
+        return super.onTouchEvent(event);
     }
 
-    /** Intercepts a touch event.
+    /** Intercepts a touch event before any of the children views see it.
      *
      * @param event The motion event to process.
      * @return True if the event should be consumed, false otherwise.
      */
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        Logf.dc("Received touch event %s, dispatching", event.toString());
+        Rect r = mTitleController.getAbsoluteCoordinates();
+        Logf.dc("Received touch event %s", event.toString());
+        if (event.getY() >= r.top && event.getY() <= r.bottom) {
+            Logf.dc("Touch event was on top of the titlebar");
+            if (mTitleController.processTouchEvent(event)) {
+                /* Controller processed the event. Stop the dispatching here */
+                return true;
+            }
+        }
+        /* Continue propagating the event */
         return super.dispatchTouchEvent(event);
-    }
-
-    /** Force the given page to be visible.
-     *
-     * The other pages will be set to GONE. No checking is done to ensure that
-     * {@param page} is actually one of the main pages.
-     *
-     * @param page The view to show.
-     */
-    private void setPage(@NotNull View page) {
-        page1.setVisibility(View.GONE);
-        page2.setVisibility(View.GONE);
-        page3.setVisibility(View.GONE);
-        page.setVisibility(View.VISIBLE);
-        currentPage = page;
     }
 
     /** Navigate to a different page with an animation.
@@ -264,19 +261,12 @@ public class MainActivity extends Activity {
      * @param targetPage The page to navigate to.
      */
     private void selectPage(View targetPage) {
-        if (currentPage != null && targetPage != null && currentPage != targetPage) {
-            /* Transition between currentPage and targetPage */
-            animatePageTransition(currentPage, targetPage);
+        if (mCurrentPage != null && targetPage != null && mCurrentPage != targetPage) {
+            /* Transition between mCurrentPage and targetPage */
+            animatePageTransition(mCurrentPage, targetPage);
             /* Handle code unique to each page */
-            /* The page 2 animation is disabled
-            if (targetPage == page2) {
-                surfaceController.doEnterPage();
-            } else if (currentPage == page2) {
-                surfaceController.doLeavePage();
-            }
-            */
         }
-        currentPage = targetPage;
+        mCurrentPage = targetPage;
     }
 
     /** Handle the animation logic to transition from one page to another.
@@ -321,23 +311,22 @@ public class MainActivity extends Activity {
                 /* Sliding animation: pages slide in and out horizontally */
                 Point screenSize = getScreenSize();
                 /* Scroll pageFrom from 0 to -screenSize.x */
-                ObjectAnimator fromAnim = ObjectAnimator.ofFloat(pageFrom, "translationX", -screenSize.x);
+                ObjectAnimator fromAnim = ObjectAnimator.ofFloat(pageFrom, "translationX", 0f, -screenSize.x);
                 fromAnim.setDuration(animDuration);
                 fromAnim.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        Logf.d(LOG_TAG, "Sliding animation from %s to %s complete", pageFrom, pageTo);
                         pageFrom.setVisibility(View.GONE);
                         super.onAnimationEnd(animation);
                     }
                 });
                 fromAnim.start();
                 /* Scroll pageTo from screenSize.x to 0 */
-                pageTo.setTranslationX(screenSize.x);
                 pageTo.setVisibility(View.VISIBLE);
-                ObjectAnimator.ofFloat(pageTo, "translationX", 0f)
-                        .setDuration(animDuration)
-                        .start();
+                pageTo.setAlpha(1f);
+                ObjectAnimator toAnim = ObjectAnimator.ofFloat(pageTo, "translationX", screenSize.x, 0f);
+                toAnim.setDuration(animDuration);
+                toAnim.start();
             } break;
             default:
                 Logf.ec("Invalid page transition selection %d", mPageAnimationType);
@@ -428,23 +417,24 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Handle switch toggle.
+    /** Handle button toggle.
      *
-     * This method is called when a registered Switch view was changed.
+     * This method is called when a registered toggle button changes states.
      *
-     * @param switchView Reference to the switch that was changed.
+     * @param button Reference to the button that changed states.
      */
     @Callback
-    public void onButtonToggle(@NotNull View switchView) {
-        if (!(switchView instanceof Switch)) {
-            throw new RuntimeException(String.format("View %s not a Switch", switchView.toString()));
+    public void onButtonToggle(@NotNull View button) {
+        if (!(button instanceof CompoundButton)) {
+            /* Registering this to something other than a CompoundButton is a fatal error */
+            throw new RuntimeException(String.format("View %s not a compound button", button.toString()));
         }
-        boolean isOn = ((Switch)switchView).isChecked();
-        if (switchView.getId() == R.id.switchDebug) {
+        boolean isOn = ((CompoundButton)button).isChecked();
+        if (button.getId() == R.id.switchDebug) {
             debug.debug("Debug toggle switch is " + (isOn ? "on" : "off"));
             toast("Debug toggle switch is " + (isOn ? "on" : "off"));
         } else {
-            showSnack(String.format("Unknown button with ID %d", switchView.getId()));
+            showSnack(String.format("Unknown button with ID %d", button.getId()));
         }
     }
 
@@ -474,6 +464,16 @@ public class MainActivity extends Activity {
                 Logf.ec("Invalid radio button ID %d from %s", radioButton.getId(), radioButton.toString());
                 break;
         }
+    }
+
+    /** Default callback for interactive views without callbacks.
+     *
+     * @param view The view that was clicked/touched.
+     */
+    @SuppressWarnings("unused")
+    @Callback
+    public void onViewClickDebugHandler(@NotNull View view) {
+        debug.debug("Default click handler called on %s", view.toString());
     }
 
     /** Get the device's screen size in pixels.

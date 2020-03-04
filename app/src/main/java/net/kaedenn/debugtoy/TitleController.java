@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
+import android.graphics.Rect;
 import android.text.Spanned;
 import android.text.SpannedString;
 import android.util.Pair;
@@ -93,7 +94,6 @@ class TitleController {
     public TitleController() {
         mTitleView = MainActivity.getInstance().requireViewById(R.id.titlebar);
         mHelperView = MainActivity.getInstance().requireViewById(R.id.titlebarHelper);
-        mTitleView.setOnTouchListener(this::onTitlebarTouchEvent);
         mMessageQueue = Collections.synchronizedList(new ArrayList<>());
         mInterpolator = AnimationUtils.loadInterpolator(MainActivity.getInstance(), android.R.anim.linear_interpolator);
         mDurationCoeff = DEFAULT_DURATION_COEFFICIENT;
@@ -101,6 +101,16 @@ class TitleController {
 
         mAnimColorValues = Res.getIntArray(R.array.tbDiscoColorValues);
         mAnimScaleValues = Functional.toFloatArray(Res.getTextArray(R.array.tbDiscoScaleValues));
+    }
+
+    /** Obtain the absolute x, y, width, and height for the title view.
+     *
+     * @return A rect with the view's current absolute coordinates.
+     */
+    public Rect getAbsoluteCoordinates() {
+        int[] pos = new int[2];
+        mTitleView.getLocationOnScreen(pos);
+        return new Rect(pos[0], pos[1], pos[0]+mTitleView.getWidth(), pos[1]+mTitleView.getHeight());
     }
 
     /** Set the default text color.
@@ -139,16 +149,12 @@ class TitleController {
 
     /** Process touch events on the titlebar
      *
-     * @param v The titlebar view (ignored; {@code mTitleView} is used)
-     * @param event The touch event
+     * @param e The touch event
      * @return True if the listener has consumed the event, false otherwise
      */
-    private boolean onTitlebarTouchEvent(View v, MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            makeColorAnim().start();
-            makeScaleAnim().start();
-            return true;
-        }
+    public boolean processTouchEvent(MotionEvent e) {
+        makeColorAnim().start();
+        makeScaleAnim().start();
         return false;
     }
 
@@ -258,7 +264,7 @@ class TitleController {
         int sw = MainActivity.getInstance().getScreenWidth();
         float xStart, xEnd;
         if (isViewCentered()) {
-            xStart = sw + width/2 * TEXT_MARGIN;
+            xStart = sw + width/2f * TEXT_MARGIN;
             xEnd = -(width + width * TEXT_MARGIN);
             Logf.vc("Animating width=%d from x1=%g to x2=%g (sw=%d, center=true)", width, xStart, xEnd, sw);
         } else {

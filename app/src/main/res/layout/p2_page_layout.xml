@@ -8,11 +8,11 @@
     tools:showIn="@layout/activity_main"
     tools:visibility="visible">
 
-    <SurfaceView
+    <!--<SurfaceView
         android:id="@+id/page2Surface"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/main_bg"
         android:clickable="true"
-        tools:visibility="visible" />
+        tools:visibility="visible" />-->
 </android.widget.RelativeLayout>

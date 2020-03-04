@@ -40,35 +40,31 @@
             android:visibility="gone"
             tools:text="Helper for titlebar formatting" />
 
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/pagesLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_weight="1">
 
             <include
                 layout="@layout/p1_debugging_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="visible"
-                tools:visibility="gone" />
+                android:visibility="visible" />
 
             <include
-                layout="@layout/p2_animation_layout"
+                layout="@layout/p2_page_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="gone"
-                tools:visibility="gone" />
+                android:visibility="gone" />
 
             <include
                 layout="@layout/p3_options_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="gone"
-                tools:visibility="visible" />
+                android:visibility="gone" />
 
-        </LinearLayout>
+        </FrameLayout>
 
         <LinearLayout
             android:id="@+id/pageButtons"
