@@ -39,7 +39,7 @@ public class Logf {
      * This class wraps all of a class's logging configuration.
      */
     @SuppressWarnings("WeakerAccess")
-    private class LogConfig {
+    private static class LogConfig {
         public String mClass;
         public String mTag;
         public boolean mEnable;

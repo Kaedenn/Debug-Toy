@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.widget.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/page3"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:showIn="@layout/activity_main">
+    android:layout_height="match_parent">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -21,44 +19,95 @@
                 android:id="@+id/pageAnimationSelection"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:checkedButton="@id/radioAnimFade">
-
-                <RadioButton
-                    android:id="@+id/radioAnimNone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nextFocusDown="@id/radioAnimFade"
-                    android:onClick="onRadioButtonChange"
-                    android:text="@string/radioAnim0" />
-
-                <RadioButton
-                    android:id="@+id/radioAnimFade"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nextFocusUp="@id/radioAnimNone"
-                    android:nextFocusDown="@id/radioAnimSlide"
-                    android:onClick="onRadioButtonChange"
-                    android:text="@string/radioAnim1" />
+                android:checkedButton="@id/radioAnimSlide">
 
                 <RadioButton
                     android:id="@+id/radioAnimSlide"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:nextFocusUp="@id/radioAnimFade"
-                    android:nextFocusDown="@id/switchDebug"
-                    android:onClick="onRadioButtonChange"
-                    android:text="@string/radioAnim2" />
+                    android:onClick="onButtonToggle"
+                    android:text="@string/optAnimSlideText" />
+
+                <RadioButton
+                    android:id="@+id/radioAnimFade"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="onButtonToggle"
+                    android:text="@string/optAnimFadeText" />
+
+                <RadioButton
+                    android:id="@+id/radioAnimNone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="onButtonToggle"
+                    android:text="@string/optAnimNoneText" />
 
             </RadioGroup>
 
-            <CheckBox
+            <View
+                android:id="@+id/divider2"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <!--<CheckBox
                 android:id="@+id/switchDebug"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:nextFocusUp="@id/radioAnimSlide"
                 android:checked="true"
+                android:nextFocusUp="@id/radioAnimSlide"
                 android:onClick="onButtonToggle"
-                android:text="@string/switchDebug" />
+                android:text="@string/optDebugSwitchText" />
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />-->
+
+            <RadioGroup
+                android:id="@+id/titleScrollSpeedSelection"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <RadioButton
+                    android:id="@+id/titleSpeedFast"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="onButtonToggle"
+                    android:text="@string/optTitleFastText" />
+
+                <RadioButton
+                    android:id="@+id/titleSpeedMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:onClick="onButtonToggle"
+                    android:text="@string/optTitleMediumText" />
+
+                <RadioButton
+                    android:id="@+id/titleSpeedSlow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="onButtonToggle"
+                    android:text="@string/optTitleSlowText" />
+            </RadioGroup>
+
+            <View
+                android:id="@+id/divider3"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <ToggleButton
+                android:id="@+id/titleDirection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:onClick="onButtonToggle"
+                android:textOff="@string/optTitleRTL"
+                android:textOn="@string/optTitleLTR"
+                android:tooltipText="@string/optTitleDirTooltip" />
 
             <!--
             <NumberPicker

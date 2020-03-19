@@ -4,9 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/page1"
     android:layout_width="wrap_content"
-    android:layout_height="match_parent"
-    android:visibility="visible"
-    tools:showIn="@layout/activity_main">
+    android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/page1Constraint"
@@ -18,8 +16,7 @@
         android:layout_alignParentBottom="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context=".MainActivity"
-        tools:layout_editor_absoluteY="1dp"
-        tools:showIn="@layout/activity_main">
+        tools:layout_editor_absoluteY="1dp">
 
         <ScrollView
             android:id="@+id/debugTextScroll"
@@ -86,7 +83,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@drawable/button_main"
+                android:background="@drawable/button_bg_round"
                 android:minHeight="@dimen/btnShortHeight"
                 android:nextFocusLeft="@id/debugCommand"
                 android:nextFocusRight="@id/btClear"
@@ -103,7 +100,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@drawable/button_main"
+                android:background="@drawable/button_bg_round"
                 android:minHeight="@dimen/btnShortHeight"
                 android:nextFocusLeft="@id/btDebug"
                 android:nextFocusRight="@id/btClearAll"
@@ -120,7 +117,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@drawable/button_main"
+                android:background="@drawable/button_bg_round"
                 android:minHeight="@dimen/btnShortHeight"
                 android:nextFocusLeft="@id/btClear"
                 android:nextFocusUp="@id/debugCommand"

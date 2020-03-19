@@ -1,37 +1,45 @@
 <resources>
     <!-- Text displayed inside the application's UI -->
     <string name="app_name">Debug Toy</string>
+    <string name="pg1ButtonText">Page 1</string>
+    <string name="pg2ButtonText">Page 2</string>
+    <string name="pg3ButtonText">Page 3</string>
+
     <string name="debug_button_text">Run</string>
     <string name="clear_button_text">Clear Text</string>
     <string name="clear_all_button_text">Clear All</string>
     <string name="debug_text_hint">Debugging Text</string>
-    <string name="debug_command_hint">Debug Command</string>
-    <string name="page1_button">Page 1</string>
-    <string name="page2_button">Page 2</string>
-    <string name="page3_button">Page 3</string>
+    <string name="debug_command_hint">Command</string>
 
     <!-- Options labels and strings -->
-    <string name="switchDebug">Debugging</string>
-    <string name="radioAnim0">No page animation</string>
-    <string name="radioAnim1">Fade page animation</string>
-    <string name="radioAnim2">Slide page animation</string>
+    <string name="optDebugSwitchText">Debugging</string>
+    <string name="optAnimNoneText">No page animation</string>
+    <string name="optAnimFadeText">Fade page animation</string>
+    <string name="optAnimSlideText">Slide page animation</string>
+    <string name="optTitleFastText">Fast Title Scroll</string>
+    <string name="optTitleMediumText">Medium Title Scroll</string>
+    <string name="optTitleSlowText">Slow Title Scroll</string>
+    <string name="optTitleRTL">Right-to-Left</string>
+    <string name="optTitleLTR">Left-to-Right</string>
+    <string name="optTitleDirTooltip">Title bar scrolling direction</string>
+
+    <!-- Scale values for the interactive message animation -->
+    <array name="tbDiscoScaleValues">
+        <item>1.0f</item>
+        <item>0.9f</item>
+        <item>1.1f</item>
+        <item>1.0f</item>
+    </array>
 
     <!-- Title messages -->
-    <string-array name="title_messages">
+    <string-array name="tbMessages">
         <item><![CDATA[Welcome!]]></item>
-        <item>This is a toy application to investigate Android application development</item>
+        <item><![CDATA[This is a toy application to investigate Android application development]]></item>
         <item><![CDATA[The application is <b>not</b> suitable for use on actual devices]]></item>
         <item><![CDATA[<font color="red">Red!</font>]]></item>
         <item><![CDATA[<font color="green">Green!</font>]]></item>
         <item><![CDATA[<font color="blue">Blue!</font>]]></item>
-        <item><![CDATA[<font color="red">C</font><font color="orange">o</font><font color="yellow">l</font><font color="green">o</font><font color="blue">r</font><font color="violet">!</font>]]></item>
+        <item><![CDATA[We have <font color="red">C</font><font color="orange">o</font><font color="yellow">l</font><font color="green">o</font><font color="blue">r</font><font color="violet">!</font>]]></item>
     </string-array>
-
-    <array name="tbDiscoScaleValues">
-        <item>1f</item>
-        <item>0.8f</item>
-        <item>1.2f</item>
-        <item>1f</item>
-    </array>
 
 </resources>

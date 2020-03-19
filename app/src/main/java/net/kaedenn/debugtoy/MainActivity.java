@@ -7,7 +7,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
-import android.graphics.PointF;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Debug;
@@ -17,11 +16,7 @@ import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CompoundButton;
-import android.widget.RadioButton;
-import android.widget.Switch;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -80,10 +75,9 @@ public class MainActivity extends Activity {
 
     /** Create the activity.
      *
-     * This function performs initial setup for the three pages:
-     * Page 1: Register the commands for the {@link DebugPageController}.
-     * Page 2: Construct the surface controller.
-     * Page 3: Nothing yet.
+     * This is the entry point to the application. This method contains the code
+     * for setting up the individual pages (where necessary) and for setting up
+     * the scrolling titlebar widget.
      *
      * @param savedInstanceState Saved application information.
      */
@@ -97,11 +91,20 @@ public class MainActivity extends Activity {
         page2 = requireViewById(R.id.page2);
         page3 = requireViewById(R.id.page3);
 
+        /* TODO: Figure out a good reason to replace page1, page2, page3 with a hash map
+        ViewGroup pages = requireViewById(R.id.pagesLayout);
+        for (int i = 0; i < pages.getChildCount(); ++i) {
+            View page = pages.getChildAt(i);
+            mPageMap.put(page.getId(), page);
+        }
+        */
+
         /* Title bar setup */
         mTitleController = new TitleController();
-        for (String s : getResources().getStringArray(R.array.title_messages)) {
-            mTitleController.addMessage(Html.fromHtml(s, 0));
+        for (String s : getResources().getStringArray(R.array.tbMessages)) {
+            mTitleController.getTicker().addMessage(Html.fromHtml(s, 0));
         }
+        mTitleController.getTicker().startAnimation();
 
         /* Select page1 directly */
         page1.setVisibility(View.VISIBLE);
@@ -157,8 +160,7 @@ public class MainActivity extends Activity {
                 while ((s = stderr.readLine()) != null) {
                     debug.debug("!! " + s);
                 }
-            }
-            catch (IOException | InterruptedException e) {
+            } catch (IOException | InterruptedException e) {
                 debug.debug(e.toString());
             } catch (Exception e) {
                 debug.debug("Unhandled exception: " + e.toString());
@@ -173,9 +175,13 @@ public class MainActivity extends Activity {
             debug.debug("tid: %d", Os.gettid());
         }, "get user/group ID information");
 
-        debug.register("title", mTitleController::addMessage, "add new title message");
+        debug.register("title", arg -> {
+            mTitleController.getTicker().addMessage(arg);
+        }, "add new title message");
 
-        debug.register("html-title", arg -> mTitleController.addMessage(Html.fromHtml(arg, 0)), "add new HTML title message");
+        debug.register("html-title", arg -> {
+            mTitleController.getTicker().addMessage(Html.fromHtml(arg, 0));
+        }, "add new HTML title message");
 
         debug.register("page-anim", arg -> {
             Integer animMode = Str.tryParseInteger(arg);
@@ -196,40 +202,6 @@ public class MainActivity extends Activity {
 
     }
 
-    /** Process a touch event.
-     *
-     * @param event The motion event to process.
-     * @return True when the event is consumed, false otherwise.
-     */
-    @Override
-    public boolean onTouchEvent(@NonNull MotionEvent event) {
-        /* Disabled for now.
-        Logf.dc("Obtained final touch event %s", event.toString());
-        int action = event.getActionMasked();
-        switch (action) {
-            case (MotionEvent.ACTION_DOWN) :
-                Logf.dc("Action was DOWN");
-                break;
-            case (MotionEvent.ACTION_MOVE) :
-                Logf.dc("Action was MOVE");
-                break;
-            case (MotionEvent.ACTION_UP) :
-                Logf.dc("Action was UP");
-                break;
-            case (MotionEvent.ACTION_CANCEL) :
-                Logf.dc("Action was CANCEL");
-                break;
-            case (MotionEvent.ACTION_OUTSIDE) :
-                Logf.dc("Movement occurred outside of screen bounds");
-                break;
-            default:
-                Logf.ic("Movement had an unknown action %d", action);
-                break;
-        }
-        */
-        return super.onTouchEvent(event);
-    }
-
     /** Intercepts a touch event before any of the children views see it.
      *
      * @param event The motion event to process.
@@ -237,15 +209,16 @@ public class MainActivity extends Activity {
      */
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
+        /*
         Rect r = mTitleController.getAbsoluteCoordinates();
         Logf.dc("Received touch event %s", event.toString());
         if (event.getY() >= r.top && event.getY() <= r.bottom) {
             Logf.dc("Touch event was on top of the titlebar");
             if (mTitleController.processTouchEvent(event)) {
-                /* Controller processed the event. Stop the dispatching here */
                 return true;
             }
         }
+        */
         /* Continue propagating the event */
         return super.dispatchTouchEvent(event);
     }
@@ -381,7 +354,6 @@ public class MainActivity extends Activity {
      */
     @Callback
     public void onButtonClick(@NotNull View button) {
-        String cmd = debug.getDebugCommand();
         switch (button.getId()) {
             /* Page selection */
             case R.id.btPage1:
@@ -394,13 +366,14 @@ public class MainActivity extends Activity {
                 selectPage(page3);
                 break;
             /* Page 1 */
-            case R.id.btDebug:
+            case R.id.btDebug: {
+                String cmd = debug.getDebugCommand();
                 if (debug.isRegistered(cmd)) {
                     debug.execute(cmd);
                 } else {
                     showSnack(String.format("Failed to execute command \"%s\": no such command", cmd));
                 }
-                break;
+            } break;
             case R.id.btClear:
                 debug.clearDebug();
                 break;
@@ -425,43 +398,42 @@ public class MainActivity extends Activity {
      */
     @Callback
     public void onButtonToggle(@NotNull View button) {
-        if (!(button instanceof CompoundButton)) {
-            /* Registering this to something other than a CompoundButton is a fatal error */
-            throw new RuntimeException(String.format("View %s not a compound button", button.toString()));
+        CompoundButton b;
+        try {
+            b = (CompoundButton) button;
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException(String.format("View %s is not a compound button (error %s)", button.toString(), e.toString()));
         }
-        boolean isOn = ((CompoundButton)button).isChecked();
-        if (button.getId() == R.id.switchDebug) {
-            debug.debug("Debug toggle switch is " + (isOn ? "on" : "off"));
-            toast("Debug toggle switch is " + (isOn ? "on" : "off"));
-        } else {
-            showSnack(String.format("Unknown button with ID %d", button.getId()));
-        }
-    }
-
-    /** Handle selecting a page animation radio button.
-     *
-     * This method is called when one of the page animation radio buttons is
-     * clicked.
-     *
-     * @param radioButton The button that was clicked.
-     */
-    @Callback
-    public void onRadioButtonChange(@NotNull View radioButton) {
-        if (!(radioButton instanceof RadioButton)) {
-            throw new AssertionError("Page animation selection object must be a RadioButton; got: " + radioButton.toString());
-        }
-        switch (radioButton.getId()) {
+        int bid = b.getId();
+        boolean on = b.isChecked();
+        switch (bid) {
             case R.id.radioAnimNone:
-                mPageAnimationType = PAGE_NO_ANIMATION;
+                if (on) mPageAnimationType = PAGE_NO_ANIMATION;
                 break;
             case R.id.radioAnimFade:
-                mPageAnimationType = PAGE_FADE_ANIMATION;
+                if (on) mPageAnimationType = PAGE_FADE_ANIMATION;
                 break;
             case R.id.radioAnimSlide:
-                mPageAnimationType = PAGE_SLIDE_ANIMATION;
+                if (on) mPageAnimationType = PAGE_SLIDE_ANIMATION;
+                break;
+            case R.id.titleSpeedFast:
+                if (on) mTitleController.setSpeedFast();
+                break;
+            case R.id.titleSpeedMedium:
+                if (on) mTitleController.setSpeedNormal();
+                break;
+            case R.id.titleSpeedSlow:
+                if (on) mTitleController.setSpeedSlow();
+                break;
+            case R.id.titleDirection:
+                if (on) {
+                    mTitleController.setLeftToRight();
+                } else {
+                    mTitleController.setRightToLeft();
+                }
                 break;
             default:
-                Logf.ec("Invalid radio button ID %d from %s", radioButton.getId(), radioButton.toString());
+                showSnack(String.format("Unknown button with ID %d: %s", bid, b.toString()));
                 break;
         }
     }
@@ -494,6 +466,16 @@ public class MainActivity extends Activity {
     public int getScreenWidth() {
         Point size = getScreenSize();
         return size.x;
+    }
+
+    public Rect getAbsoluteLocation(@NotNull View v) {
+        int[] xy = new int[2];
+        v.getLocationOnScreen(xy);
+        int x = xy[0];
+        int y = xy[1];
+        int w = x + v.getWidth();
+        int h = y + v.getHeight();
+        return new Rect(x, y, w, h);
     }
 }
 

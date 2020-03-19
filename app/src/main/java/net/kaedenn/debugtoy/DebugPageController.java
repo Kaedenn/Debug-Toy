@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import android.annotation.SuppressLint;
-import android.text.Spanned;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
